@@ -3,8 +3,8 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "continual-learning"
-version = "0.1.0"
+name = "continual-learning-slm"
+version = "0.2.0"
 description = "Continual Learning SLM with TTT-E2E and Sparse Memory Finetuning"
 readme = "README.md"
 license = {text = "MIT"}

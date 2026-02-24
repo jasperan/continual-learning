@@ -1,5 +1,10 @@
 # Continual Learning SLM
 
+[![PyPI](https://img.shields.io/pypi/v/continual-learning-slm)](https://pypi.org/project/continual-learning-slm/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/continual-learning-slm)](https://pypi.org/project/continual-learning-slm/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+
 A continual learning system that enables Small Language Models to learn from new documents in real-time by updating neural weights at inference time, without catastrophic forgetting.
 
 ## How It Works
@@ -34,13 +39,19 @@ A more sophisticated retrieval approach. Documents are encoded into hidden-state
 
 ## Installation
 
+From PyPI:
+
+```bash
+pip install continual-learning-slm
+```
+
+Or from source (for development):
+
 ```bash
 git clone https://github.com/jasperan/continual-learning.git
 cd continual-learning
 pip install -e ".[dev]"
 ```
-
-This installs the package in editable mode with all dependencies (PyTorch, Transformers, JAX, Rich, Questionary, scikit-learn, etc.) plus dev tools (pytest).
 
 ## Quick Start
 
