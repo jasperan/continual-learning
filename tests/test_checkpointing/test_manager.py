@@ -51,7 +51,8 @@ class TestCheckpointManager:
         manager.save("restore_test", dual_mlps=[dual_mlp], metadata={})
 
         new_dual = DualMLP(hidden_size=64, intermediate_size=128)
-        assert torch.all(list(new_dual.trainable_mlp.parameters())[0] == 0)
+        # New DualMLP has small random init, not the saved 0.42 values
+        assert not torch.allclose(list(new_dual.trainable_mlp.parameters())[0], torch.tensor(0.42))
 
         manager.load("restore_test", dual_mlps=[new_dual])
         for param in new_dual.trainable_mlp.parameters():

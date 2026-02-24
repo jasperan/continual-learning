@@ -21,6 +21,8 @@ class TTTEngine:
         mini_batch_size: int = 32,
         gradient_steps: int = 1,
         max_tokens: int = 4096,
+        alpha_decay_rate: float = 0.005,
+        alpha_min: float = 0.5,
     ):
         self.model = model
         self.tokenizer = tokenizer
@@ -29,6 +31,8 @@ class TTTEngine:
         self.mini_batch_size = mini_batch_size
         self.gradient_steps = gradient_steps
         self.max_tokens = max_tokens
+        self.alpha_decay_rate = alpha_decay_rate
+        self.alpha_min = alpha_min
 
         # Optimizer only over trainable params
         trainable_params = []
@@ -90,8 +94,10 @@ class TTTEngine:
                     # Apply TF-IDF masking to gradients
                     for dual in self.dual_mlps:
                         if dual.gate.idf_scores is not None:
+                            # Use cached input from forward pass for TF computation
+                            activation = dual._cached_input if dual._cached_input is not None else torch.zeros(1, 1, dual.hidden_size)
                             mask = dual.gate.compute_mask(
-                                torch.zeros(1, 1, dual.hidden_size).to(device)
+                                activation.to(device)
                             ).to(device)
                             for param in dual.trainable_mlp.parameters():
                                 if param.grad is not None:
@@ -105,6 +111,10 @@ class TTTEngine:
                     losses.append(loss.item())
 
             tokens_processed += batch_ids.shape[1] - 1
+
+            # Decay alpha to increase trainable MLP contribution over time
+            for dual in self.dual_mlps:
+                dual.alpha = max(self.alpha_min, dual.alpha - self.alpha_decay_rate)
 
             if callback:
                 callback(

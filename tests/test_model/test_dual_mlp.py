@@ -24,20 +24,22 @@ class TestDualMLP:
         for param in self.dual_mlp.trainable_mlp.parameters():
             assert param.requires_grad
 
-    def test_trainable_mlp_starts_zero(self):
+    def test_trainable_mlp_starts_near_zero(self):
         for param in self.dual_mlp.trainable_mlp.parameters():
-            assert torch.all(param == 0)
+            assert param.abs().max() < 0.01  # Small random init, not zeros
 
     def test_output_shape(self):
         x = torch.randn(2, 10, self.hidden_size)
         out = self.dual_mlp(x)
         assert out.shape == x.shape
 
-    def test_initial_output_equals_frozen(self):
+    def test_initial_output_approximately_equals_frozen(self):
         x = torch.randn(2, 10, self.hidden_size)
         frozen_out = self.dual_mlp.frozen_mlp(x)
         dual_out = self.dual_mlp(x)
-        assert torch.allclose(dual_out, frozen_out, atol=1e-6)
+        # With small random init and alpha close to 1, output is very close to frozen
+        relative_diff = (dual_out - frozen_out).abs().max() / (frozen_out.abs().max() + 1e-8)
+        assert relative_diff < 0.1  # Within 10% of frozen output
 
     def test_alpha_blending(self):
         for param in self.dual_mlp.trainable_mlp.parameters():
@@ -75,7 +77,7 @@ class TestDualMLP:
         original = FakeMLP()
         dual = DualMLP.from_existing_mlp(original, alpha_initial=1.0, tfidf_threshold=0.3)
         assert torch.equal(dual.frozen_mlp.gate_proj.weight, original.gate_proj.weight)
-        assert torch.all(dual.trainable_mlp.gate_proj.weight == 0)
+        assert dual.trainable_mlp.gate_proj.weight.abs().max() < 0.01
 
     def test_get_trainable_params(self):
         params = list(self.dual_mlp.get_trainable_params())

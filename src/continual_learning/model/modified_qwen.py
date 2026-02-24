@@ -28,11 +28,13 @@ def inject_dual_mlps(
     # Inject DualMLP into target layers
     for idx in layer_indices:
         original_mlp = layers[idx].mlp
+        device = next(original_mlp.parameters()).device
         dual_mlp = DualMLP.from_existing_mlp(
             original_mlp,
             alpha_initial=alpha_initial,
             tfidf_threshold=tfidf_threshold,
         )
+        dual_mlp = dual_mlp.to(device)
         layers[idx].mlp = dual_mlp
 
 
@@ -49,7 +51,7 @@ def load_modified_model(
     """
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
-        torch_dtype=torch.float32,
+        dtype=torch.float32,
         device_map=device,
     )
     tokenizer = AutoTokenizer.from_pretrained(model_name)

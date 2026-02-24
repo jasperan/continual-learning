@@ -86,10 +86,10 @@ class TestEndToEndPipeline:
             for p in dual.trainable_mlp.parameters():
                 p.data.zero_()
 
-        # Verify weights are zeroed
+        # Verify weights are zeroed (we manually zeroed them above)
         for dual in dual_mlps:
             for p in dual.trainable_mlp.parameters():
-                assert torch.all(p == 0)
+                assert torch.allclose(p, torch.zeros_like(p))
 
         # Step 5: Restore checkpoint
         manager.load("test_cp", dual_mlps=dual_mlps)

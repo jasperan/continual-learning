@@ -27,7 +27,11 @@ class SwiGLUMLP(nn.Module):
 class DualMLP(nn.Module):
     """Dual-MLP module: frozen (original) + trainable (zero-init) with TF-IDF gating.
 
-    Output: alpha * frozen_output + (1 - alpha) * gated_trainable_output
+    Output: frozen_output + (1 - alpha) * gated_trainable_output
+
+    Uses a residual connection so the frozen MLP output is always fully preserved.
+    The trainable MLP adds new knowledge on top, scaled by (1 - alpha).
+    When trainable weights are zero-initialized, the output equals frozen_output exactly.
     """
 
     def __init__(
@@ -35,7 +39,7 @@ class DualMLP(nn.Module):
         hidden_size: int,
         intermediate_size: int,
         hidden_act: str = "silu",
-        alpha_initial: float = 1.0,
+        alpha_initial: float = 0.95,
         tfidf_threshold: float = 0.3,
     ):
         super().__init__()
@@ -49,15 +53,16 @@ class DualMLP(nn.Module):
 
         self.trainable_mlp = SwiGLUMLP(hidden_size, intermediate_size, hidden_act)
         for param in self.trainable_mlp.parameters():
-            nn.init.zeros_(param)
+            nn.init.normal_(param, mean=0.0, std=0.001)
 
         self.gate = TFIDFGate(hidden_size=hidden_size, threshold=tfidf_threshold)
+        self._cached_input = None
 
     @classmethod
     def from_existing_mlp(
         cls,
         original_mlp: nn.Module,
-        alpha_initial: float = 1.0,
+        alpha_initial: float = 0.95,
         tfidf_threshold: float = 0.3,
     ) -> "DualMLP":
         hidden_size = original_mlp.gate_proj.in_features
@@ -74,6 +79,8 @@ class DualMLP(nn.Module):
         return dual
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        self._cached_input = x.detach()
+
         frozen_out = self.frozen_mlp(x)
         trainable_out = self.trainable_mlp(x)
 
@@ -81,7 +88,7 @@ class DualMLP(nn.Module):
         mask = mask.to(trainable_out.device)
         gated_trainable_out = trainable_out * mask
 
-        return self.alpha * frozen_out + (1.0 - self.alpha) * gated_trainable_out
+        return frozen_out + (1.0 - self.alpha) * gated_trainable_out
 
     def get_trainable_params(self) -> Iterator[nn.Parameter]:
         return self.trainable_mlp.parameters()

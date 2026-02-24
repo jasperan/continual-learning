@@ -23,9 +23,9 @@ DEFAULT_CONFIG = {
         "dir": "checkpoints",
     },
     "alpha": {
-        "initial": 1.0,
-        "decay_rate": 0.01,
-        "min_value": 0.3,
+        "initial": 0.95,
+        "decay_rate": 0.005,
+        "min_value": 0.5,
     },
 }
 
