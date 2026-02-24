@@ -1,0 +1,23 @@
+model:
+  name: "Qwen/Qwen2.5-1.5B"
+  modified_layers_start: 21
+  modified_layers_end: 28
+  device: "auto"
+
+ttt:
+  learning_rate: 1.0e-5
+  mini_batch_size: 32
+  gradient_steps: 1
+  max_tokens_per_document: 4096
+
+tfidf_gate:
+  threshold: 0.3
+  calibration_samples: 2000
+
+checkpoint:
+  dir: "checkpoints"
+
+alpha:
+  initial: 1.0
+  decay_rate: 0.01
+  min_value: 0.3

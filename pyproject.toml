@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "continual-learning"
+version = "0.1.0"
+description = "Continual Learning SLM with TTT-E2E and Sparse Memory Finetuning"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+dependencies = [
+    "torch",
+    "transformers",
+    "accelerate",
+    "jax",
+    "jaxlib",
+    "questionary",
+    "rich",
+    "datasets",
+    "beautifulsoup4",
+    "requests",
+    "pyyaml",
+    "scikit-learn",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
+
+[project.scripts]
+continual-learning = "continual_learning.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
