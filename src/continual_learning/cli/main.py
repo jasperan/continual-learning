@@ -22,6 +22,8 @@ _ttt_engine = None
 _checkpoint_manager = None
 _config = None
 _learning_history = []
+_jitrl_mvp_engine = None
+_jitrl_full_engine = None
 
 
 def clear_screen():
@@ -83,6 +85,10 @@ def build_menu_choices() -> list:
         questionary.Choice("Save Checkpoint", value="save_cp"),
         questionary.Choice("Load Checkpoint", value="load_cp"),
         questionary.Choice("List Checkpoints", value="list_cp"),
+        questionary.Separator("─── JITRL COMPARISON ───────"),
+        questionary.Choice("JitRL MVP (Learn Doc)", value="jitrl_mvp"),
+        questionary.Choice("JitRL Full (Learn Doc)", value="jitrl_full"),
+        questionary.Choice("Compare All Engines", value="compare_engines"),
         questionary.Separator("─── SETTINGS ───────────────"),
         questionary.Choice("Configure", value="configure"),
         questionary.Separator("─── EXIT ───────────────────"),
@@ -458,6 +464,136 @@ def handle_forgetting():
     Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
 
 
+
+def _ensure_jitrl_mvp():
+    global _jitrl_mvp_engine
+    if _jitrl_mvp_engine is not None:
+        return True
+    if not ensure_model_loaded():
+        return False
+    from continual_learning.jitrl.mvp.engine import JitRLMVPEngine
+    _jitrl_mvp_engine = JitRLMVPEngine(
+        model=_model, tokenizer=_tokenizer, top_k=3, bias_strength=2.0,
+    )
+    return True
+
+
+def _ensure_jitrl_full():
+    global _jitrl_full_engine
+    if _jitrl_full_engine is not None:
+        return True
+    if not ensure_model_loaded():
+        return False
+    from continual_learning.jitrl.full.engine import JitRLFullEngine
+    _jitrl_full_engine = JitRLFullEngine(
+        model=_model, tokenizer=_tokenizer, modulation_temperature=0.5,
+    )
+    return True
+
+
+def handle_jitrl_mvp():
+    if not _ensure_jitrl_mvp():
+        return
+
+    file_path = Prompt.ask("[bold green]Document path[/bold green]")
+    if not os.path.exists(file_path):
+        console.print(f"[red]File not found: {file_path}[/red]")
+        return
+
+    with open(file_path) as f:
+        text = f.read()
+
+    console.print(f"[cyan]Indexing with JitRL MVP: {len(text)} chars[/cyan]")
+    metrics = _jitrl_mvp_engine.learn(text)
+    console.print(f"[green]Indexed! {metrics['chunks_added']} chunks, ~{metrics['tokens_processed']} tokens[/green]")
+
+    query = Prompt.ask("[bold green]Ask a question[/bold green]")
+    with console.status("[cyan]Generating (MVP)...[/cyan]"):
+        response = _jitrl_mvp_engine.generate(query)
+    console.print(f"\n[bold cyan]JitRL MVP[/bold cyan]: {response}\n")
+    Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
+
+
+def handle_jitrl_full():
+    if not _ensure_jitrl_full():
+        return
+
+    file_path = Prompt.ask("[bold green]Document path[/bold green]")
+    if not os.path.exists(file_path):
+        console.print(f"[red]File not found: {file_path}[/red]")
+        return
+
+    with open(file_path) as f:
+        text = f.read()
+
+    console.print(f"[cyan]Encoding with JitRL Full: {len(text)} chars[/cyan]")
+    metrics = _jitrl_full_engine.learn(text)
+    console.print(f"[green]Encoded! {metrics['tokens_processed']} tokens[/green]")
+
+    query = Prompt.ask("[bold green]Ask a question[/bold green]")
+    with console.status("[cyan]Generating (Full)...[/cyan]"):
+        response = _jitrl_full_engine.generate(query)
+    console.print(f"\n[bold cyan]JitRL Full[/bold cyan]: {response}\n")
+    Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
+
+
+def handle_compare_engines():
+    if not ensure_model_loaded():
+        return
+    _ensure_jitrl_mvp()
+    _ensure_jitrl_full()
+
+    from continual_learning.jitrl.comparison import ComparisonHarness
+
+    file_path = Prompt.ask("[bold green]Document path to learn[/bold green]")
+    if not os.path.exists(file_path):
+        console.print(f"[red]File not found: {file_path}[/red]")
+        return
+    with open(file_path) as f:
+        learn_text = f.read()
+
+    console.print("[cyan]Enter QA pairs (empty question to stop):[/cyan]")
+    qa_items = []
+    while True:
+        q = Prompt.ask("[green]Question[/green] (empty to stop)", default="")
+        if not q:
+            break
+        a = Prompt.ask("[green]Expected answer[/green]")
+        qa_items.append({"question": q, "answer": a})
+
+    if not qa_items:
+        console.print("[yellow]No QA items. Aborting comparison.[/yellow]")
+        Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
+        return
+
+    engines = {
+        "JitRL MVP": _jitrl_mvp_engine,
+        "JitRL Full": _jitrl_full_engine,
+    }
+
+    harness = ComparisonHarness(engines=engines)
+    with console.status("[bold cyan]Running comparison..."):
+        results = harness.run_comparison([learn_text], qa_items)
+
+    table = Table(title="Engine Comparison")
+    table.add_column("Engine", style="cyan")
+    table.add_column("Accuracy", style="green")
+    table.add_column("Learn Time", style="yellow")
+    table.add_column("Eval Time", style="yellow")
+    table.add_column("Tokens Learned", style="dim")
+
+    for name, r in results.items():
+        table.add_row(
+            name,
+            f"{r['accuracy']:.2%}",
+            f"{r['learn_time_s']:.2f}s",
+            f"{r['eval_time_s']:.2f}s",
+            str(r["tokens_learned"]),
+        )
+    console.print(table)
+    Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
+
+
 MENU_HANDLERS = {
     "chat": handle_chat,
     "ask": handle_ask,
@@ -472,6 +608,9 @@ MENU_HANDLERS = {
     "load_cp": handle_load_checkpoint,
     "list_cp": handle_list_checkpoints,
     "configure": handle_configure,
+    "jitrl_mvp": handle_jitrl_mvp,
+    "jitrl_full": handle_jitrl_full,
+    "compare_engines": handle_compare_engines,
 }
 
 
