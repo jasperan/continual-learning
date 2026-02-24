@@ -1,5 +1,10 @@
-# Design docs (local only)
+# Claude Code / AI tooling (local only)
+CLAUDE.md
 docs/plans/
+.mcp.json
+task_plan.md
+findings.md
+progress.md
 
 # Python
 __pycache__/
