@@ -13,7 +13,7 @@ class RewardComputer:
             return torch.zeros(self.hidden_size)
 
         query_mean = query_hidden.detach().mean(dim=(0, 1))
-        knowledge_mean = knowledge_embeddings.detach().mean(dim=0)
+        knowledge_mean = knowledge_embeddings.detach().mean(dim=0).to(query_mean.device)
 
         query_norm = F.normalize(query_mean, dim=0)
         knowledge_norm = F.normalize(knowledge_mean, dim=0)
