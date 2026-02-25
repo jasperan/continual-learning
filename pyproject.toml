@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "continual-learning-slm"
-version = "0.2.0"
+version = "0.3.0"
 description = "Continual Learning SLM with TTT-E2E and Sparse Memory Finetuning"
 readme = "README.md"
 license = {text = "MIT"}
