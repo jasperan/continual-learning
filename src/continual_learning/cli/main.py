@@ -24,6 +24,7 @@ _config = None
 _learning_history = []
 _jitrl_mvp_engine = None
 _jitrl_full_engine = None
+_ace_engine = None
 
 
 def clear_screen():
@@ -89,6 +90,11 @@ def build_menu_choices() -> list:
         questionary.Choice("JitRL MVP (Learn Doc)", value="jitrl_mvp"),
         questionary.Choice("JitRL Full (Learn Doc)", value="jitrl_full"),
         questionary.Choice("Compare All Engines", value="compare_engines"),
+        questionary.Separator("─── ACE (CONTEXT ENGINEERING) ──"),
+        questionary.Choice("ACE Learn Document", value="ace_learn"),
+        questionary.Choice("ACE Ask Question", value="ace_ask"),
+        questionary.Choice("ACE Save Playbook", value="ace_save"),
+        questionary.Choice("ACE Load Playbook", value="ace_load"),
         questionary.Separator("─── SETTINGS ───────────────"),
         questionary.Choice("Configure", value="configure"),
         questionary.Separator("─── EXIT ───────────────────"),
@@ -491,6 +497,22 @@ def _ensure_jitrl_full():
     return True
 
 
+def _ensure_ace():
+    global _ace_engine
+    if _ace_engine is not None:
+        return True
+    from continual_learning.ace.engine import ACEEngine
+    _ace_engine = ACEEngine(
+        ollama_model=_config["ace"]["ollama_model"],
+        ollama_base_url=_config["ace"]["ollama_base_url"],
+        num_loops=_config["ace"]["num_loops"],
+        playbook_dir=_config["ace"]["playbook_dir"],
+        max_strategies=_config["ace"]["max_strategies"],
+    )
+    console.print("[green]ACE engine initialized (Ollama backend).[/green]")
+    return True
+
+
 def handle_jitrl_mvp():
     if not _ensure_jitrl_mvp():
         return
@@ -537,11 +559,85 @@ def handle_jitrl_full():
     Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
 
 
+def handle_ace_learn():
+    if not _ensure_ace():
+        return
+
+    file_path = Prompt.ask("[bold green]Document path[/bold green]")
+    if not os.path.exists(file_path):
+        console.print(f"[red]File not found: {file_path}[/red]")
+        return
+
+    with open(file_path) as f:
+        text = f.read()
+
+    console.print(f"[cyan]Document loaded: {len(text)} characters[/cyan]")
+
+    # Ask for optional QA pairs to drive the ACE loop
+    console.print("[cyan]Enter QA pairs for ACE loop (empty question to skip):[/cyan]")
+    qa_pairs = []
+    while True:
+        q = Prompt.ask("[green]Question[/green] (empty to skip)", default="")
+        if not q:
+            break
+        a = Prompt.ask("[green]Expected answer[/green]")
+        qa_pairs.append({"question": q, "answer": a})
+
+    def progress_callback(loop_num, assessment):
+        console.print(f"  [dim]Loop {loop_num}: assessment={assessment}[/dim]")
+
+    console.rule("[bold cyan]ACE Learning...[/bold cyan]")
+    metrics = _ace_engine.learn(text, qa_pairs=qa_pairs or None, callback=progress_callback)
+
+    console.print(f"\n[green]ACE learning complete![/green]")
+    console.print(f"  Tokens processed: {metrics['tokens_processed']}")
+    console.print(f"  Loops completed: {metrics['loops_completed']}")
+    console.print(f"  Strategies evolved: {metrics['num_strategies']}")
+    Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
+
+
+def handle_ace_ask():
+    if not _ensure_ace():
+        return
+
+    query = Prompt.ask("[bold green]Question[/bold green]")
+
+    with console.status("[cyan]Generating (ACE)...[/cyan]"):
+        response = _ace_engine.generate(query)
+
+    console.print(f"\n[bold cyan]ACE[/bold cyan]: {response}\n")
+    Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
+
+
+def handle_ace_save_playbook():
+    if not _ensure_ace():
+        return
+
+    name = Prompt.ask("[bold green]Playbook name[/bold green]")
+    path = _ace_engine.save_playbook(name)
+    console.print(f"[green]Playbook saved to: {path}[/green]")
+    Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
+
+
+def handle_ace_load_playbook():
+    if not _ensure_ace():
+        return
+
+    name = Prompt.ask("[bold green]Playbook name[/bold green]")
+    try:
+        _ace_engine.load_playbook(name)
+        console.print(f"[green]Playbook '{name}' loaded ({len(_ace_engine._playbook.strategies)} strategies).[/green]")
+    except FileNotFoundError:
+        console.print(f"[red]Playbook '{name}' not found.[/red]")
+    Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
+
+
 def handle_compare_engines():
     if not ensure_model_loaded():
         return
     _ensure_jitrl_mvp()
     _ensure_jitrl_full()
+    _ensure_ace()
 
     from continual_learning.jitrl.comparison import ComparisonHarness
 
@@ -566,9 +662,13 @@ def handle_compare_engines():
         Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
         return
 
+    from continual_learning.ace.adapter import ACEAdapter
+    ace_adapter = ACEAdapter(_ace_engine, model=_model, tokenizer=_tokenizer)
+
     engines = {
         "JitRL MVP": _jitrl_mvp_engine,
         "JitRL Full": _jitrl_full_engine,
+        "ACE": ace_adapter,
     }
 
     harness = ComparisonHarness(engines=engines)
@@ -611,6 +711,10 @@ MENU_HANDLERS = {
     "jitrl_mvp": handle_jitrl_mvp,
     "jitrl_full": handle_jitrl_full,
     "compare_engines": handle_compare_engines,
+    "ace_learn": handle_ace_learn,
+    "ace_ask": handle_ace_ask,
+    "ace_save": handle_ace_save_playbook,
+    "ace_load": handle_ace_load_playbook,
 }
 
 
