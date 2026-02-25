@@ -25,3 +25,12 @@ class TestConfig:
         config = load_config(config_path=config_path)
         assert config["ttt"]["learning_rate"] == 0.01
         assert config["model"]["name"] == DEFAULT_CONFIG["model"]["name"]
+
+    def test_ace_config_defaults(self):
+        config = load_config()
+        assert "ace" in config
+        assert config["ace"]["ollama_model"] == "qwen2.5:7b"
+        assert config["ace"]["ollama_base_url"] == "http://localhost:11434"
+        assert config["ace"]["num_loops"] == 3
+        assert config["ace"]["playbook_dir"] == "playbooks"
+        assert config["ace"]["max_strategies"] == 50

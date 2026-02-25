@@ -27,6 +27,13 @@ DEFAULT_CONFIG = {
         "decay_rate": 0.005,
         "min_value": 0.5,
     },
+    "ace": {
+        "ollama_model": "qwen2.5:7b",
+        "ollama_base_url": "http://localhost:11434",
+        "num_loops": 3,
+        "playbook_dir": "playbooks",
+        "max_strategies": 50,
+    },
 }
 
 _DEFAULT_CONFIG_PATH = Path(__file__).parent.parent.parent / "configs" / "default.yaml"
