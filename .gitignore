@@ -18,6 +18,7 @@ build/
 # Data
 /data/
 /checkpoints/
+/playbooks/
 
 # Environment
 .env
