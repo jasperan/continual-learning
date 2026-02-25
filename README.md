@@ -9,7 +9,7 @@ A continual learning system that enables Small Language Models to learn from new
 
 ## How It Works
 
-This project implements three distinct continual learning strategies on top of Qwen2.5-1.5B:
+This project implements four distinct continual learning strategies on top of Qwen2.5-1.5B:
 
 ### Strategy 1: TTT-E2E (Test-Time Training End-to-End)
 
@@ -31,11 +31,25 @@ A more sophisticated retrieval approach. Documents are encoded into hidden-state
 
 **Tradeoff**: More expressive than MVP but slower (~0.04s to learn, ~33s to generate). Currently less accurate than MVP; needs hyperparameter tuning.
 
+### Strategy 4: ACE (Agentic Context Engineering)
+
+A zero-weight-update approach inspired by the [Stanford + SambaNova ACE paper](https://arxiv.org). Instead of modifying model weights or retrieving passages, ACE evolves a **playbook** — a structured set of strategies — through iterative self-improvement loops powered by a local LLM via Ollama.
+
+Each learning cycle runs three roles:
+- **Generator**: Answers questions using the document and current playbook strategies
+- **Reflector**: Critiques the answer (what went right, what went wrong, suggested improvements)
+- **Curator**: Patch-updates the playbook with minimal, targeted changes (never a full rewrite — preventing "context collapse")
+
+The playbook grows smarter with each loop: failures become strategies, successes become rules. Playbooks persist as JSON files and can be saved/loaded across sessions.
+
+**Tradeoff**: Requires Ollama running locally with a 7B+ model. No weight modification and no forgetting risk. Quality depends on the Ollama model's reasoning ability. Configurable loop count (default: 3 Generate-Reflect-Curate cycles).
+
 ## Requirements
 
 - Python 3.11+
-- NVIDIA GPU with 24GB+ VRAM (tested on A10)
+- NVIDIA GPU with 24GB+ VRAM (tested on A10) — for TTT-E2E and JitRL strategies
 - CUDA toolkit
+- [Ollama](https://ollama.com/) — required only for ACE strategy (install and `ollama pull qwen2.5:7b`)
 
 ## Installation
 
@@ -96,11 +110,22 @@ The MVP engine does not modify model weights. You can learn multiple documents a
 |---|---|
 | **JitRL Full (Learn Doc)** | Encodes a document through the full model, captures the last hidden-state embeddings, and stores them in a knowledge store. At query time, it retrieves the closest knowledge embeddings via cosine similarity, computes a reward vector, and modulates the output logits through the model's language model head. |
 
-### Comparing All Three Strategies
+### ACE: Agentic Context Engineering
+
+Requires Ollama running locally (`ollama serve`).
 
 | CLI Option | What It Does |
 |---|---|
-| **Compare All Engines** | A/B benchmarks across JitRL MVP and JitRL Full on the same document and QA pairs. Provide a document path, then enter question/answer pairs. The harness feeds the same data to each engine and reports accuracy, learn time, eval time, and tokens learned in a comparison table. |
+| **ACE Learn Document** | Loads a document and optionally collects QA pairs. If QA pairs are provided, runs N Generate-Reflect-Curate loops (default: 3) to evolve a playbook of answering strategies. Without QA pairs, simply stores the document for context. |
+| **ACE Ask Question** | Generates an answer using all stored documents and the evolved playbook strategies via Ollama. |
+| **ACE Save Playbook** | Saves the current playbook (strategies + stats) to a named JSON file in the `playbooks/` directory. |
+| **ACE Load Playbook** | Loads a previously saved playbook by name, restoring its strategies for future generation. |
+
+### Comparing All Strategies
+
+| CLI Option | What It Does |
+|---|---|
+| **Compare All Engines** | A/B benchmarks across JitRL MVP, JitRL Full, and ACE on the same document and QA pairs. Provide a document path, then enter question/answer pairs. The harness feeds the same data to each engine and reports accuracy, learn time, eval time, and tokens learned in a comparison table. |
 
 ## Evaluation and Benchmarks
 
@@ -146,18 +171,26 @@ alpha:
 tfidf_gate:
   threshold: 0.3               # TF-IDF score below which gradients are masked
   calibration_samples: 2000    # Number of samples for IDF calibration
+
+ace:
+  ollama_model: "qwen2.5:7b"            # Ollama model for ACE roles
+  ollama_base_url: "http://localhost:11434"  # Ollama API endpoint
+  num_loops: 3                           # Generate-Reflect-Curate cycles per learn
+  playbook_dir: "playbooks"             # Directory for saved playbooks
+  max_strategies: 50                     # Max strategies before FIFO eviction
 ```
 
 ## Running Tests
 
 ```bash
-# All 101 tests (~10 seconds, no GPU needed)
+# All 141 tests (~10 seconds, no GPU needed)
 python -m pytest tests/
 
 # By component
 python -m pytest tests/test_model/          # DualMLP, modified Qwen, TF-IDF gate
 python -m pytest tests/test_training/       # TTT-E2E engine
 python -m pytest tests/test_jitrl/          # JitRL MVP, Full, comparison harness
+python -m pytest tests/test_ace/            # ACE engine, roles, playbook, adapter
 python -m pytest tests/test_evaluation/     # Benchmarks, forgetting metrics
 python -m pytest tests/test_data/           # SQuAD pipeline, Oracle docs
 python -m pytest tests/test_checkpointing/  # Checkpoint save/load
@@ -214,6 +247,14 @@ src/continual_learning/
 │   │   ├── knowledge_store.py # Stores and retrieves document embeddings by cosine similarity
 │   │   └── reward.py        # Computes reward vectors and modulates logits
 │   └── comparison.py        # A/B harness: runs identical benchmarks across engines
+├── ace/
+│   ├── engine.py            # ACE orchestrator: Generate-Reflect-Curate loop
+│   ├── generator.py         # Generator role: answers questions using playbook + context
+│   ├── reflector.py         # Reflector role: critiques answers, suggests improvements
+│   ├── curator.py           # Curator role: patch-updates playbook (never full rewrite)
+│   ├── playbook.py          # Evolving strategy playbook with JSON persistence
+│   ├── ollama_client.py     # Thin sync HTTP client for Ollama /api/generate
+│   └── adapter.py           # Wraps ACEEngine as BaseJitRLEngine for comparison harness
 ├── checkpointing/
 │   └── manager.py           # Saves/loads trainable weights, TF-IDF stats, alpha, metadata
 ├── cli/
