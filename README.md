@@ -4,6 +4,7 @@
 [![PyPI Downloads](https://img.shields.io/pypi/dm/continual-learning-slm?style=for-the-badge)](https://pypi.org/project/continual-learning-slm/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue?style=for-the-badge)](https://www.python.org/)
+![Ollama](https://img.shields.io/badge/backend-Ollama-black?style=for-the-badge)
 
 A continual learning system that enables Small Language Models to learn from new documents in real-time by updating neural weights at inference time, without catastrophic forgetting.
 
