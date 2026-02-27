@@ -1,9 +1,9 @@
 # Continual Learning SLM
 
-[![PyPI](https://img.shields.io/pypi/v/continual-learning-slm)](https://pypi.org/project/continual-learning-slm/)
-[![PyPI Downloads](https://img.shields.io/pypi/dm/continual-learning-slm)](https://pypi.org/project/continual-learning-slm/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![PyPI](https://img.shields.io/pypi/v/continual-learning-slm?style=for-the-badge)](https://pypi.org/project/continual-learning-slm/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/continual-learning-slm?style=for-the-badge)](https://pypi.org/project/continual-learning-slm/)
+[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue?style=for-the-badge)](https://www.python.org/)
 
 A continual learning system that enables Small Language Models to learn from new documents in real-time by updating neural weights at inference time, without catastrophic forgetting.
 
@@ -265,3 +265,12 @@ src/continual_learning/
 ## License
 
 MIT
+
+---
+
+<div align="center">
+
+[![GitHub](https://img.shields.io/badge/GitHub-jasperan-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/jasperan)&nbsp;
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-jasperan-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/jasperan/)
+
+</div>
