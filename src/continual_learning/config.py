@@ -34,6 +34,16 @@ DEFAULT_CONFIG = {
         "playbook_dir": "playbooks",
         "max_strategies": 50,
     },
+    "doc2lora": {
+        "base_model": "google/gemma-2-2b-it",
+        "checkpoint": "SakanaAI/doc-to-lora",
+        "checkpoint_path": "gemma_demo/checkpoint-80000/pytorch_model.bin",
+        "lora_rank": 8,
+        "target_modules": ["mlp"],
+        "chunk_size": 1024,
+        "mode": "doc",
+        "simulated": False,
+    },
 }
 
 _DEFAULT_CONFIG_PATH = Path(__file__).parent.parent.parent / "configs" / "default.yaml"

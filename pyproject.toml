@@ -22,6 +22,7 @@ dependencies = [
     "requests",
     "pyyaml",
     "scikit-learn",
+    "peft",
 ]
 
 [project.optional-dependencies]
