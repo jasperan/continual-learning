@@ -25,6 +25,7 @@ _learning_history = []
 _jitrl_mvp_engine = None
 _jitrl_full_engine = None
 _ace_engine = None
+_doc2lora_engine = None
 
 
 def clear_screen():
@@ -95,6 +96,10 @@ def build_menu_choices() -> list:
         questionary.Choice("ACE Ask Question", value="ace_ask"),
         questionary.Choice("ACE Save Playbook", value="ace_save"),
         questionary.Choice("ACE Load Playbook", value="ace_load"),
+        questionary.Separator("─── DOC-TO-LORA ────────────"),
+        questionary.Choice("Doc-to-LoRA: Learn Document", value="doc2lora_learn"),
+        questionary.Choice("Doc-to-LoRA: Ask Question", value="doc2lora_ask"),
+        questionary.Choice("Doc-to-LoRA: Switch Mode", value="doc2lora_mode"),
         questionary.Separator("─── SETTINGS ───────────────"),
         questionary.Choice("Configure", value="configure"),
         questionary.Separator("─── EXIT ───────────────────"),
@@ -513,6 +518,24 @@ def _ensure_ace():
     return True
 
 
+def _ensure_doc2lora():
+    global _doc2lora_engine
+    if _doc2lora_engine is not None:
+        return True
+    ensure_model_loaded()
+    from continual_learning.doc2lora.engine import Doc2LoRAEngine
+    _doc2lora_engine = Doc2LoRAEngine(
+        model=_model,
+        tokenizer=_tokenizer,
+        lora_rank=_config["doc2lora"]["lora_rank"],
+        chunk_size=_config["doc2lora"]["chunk_size"],
+        mode=_config["doc2lora"]["mode"],
+        simulated=_config["doc2lora"]["simulated"],
+    )
+    console.print("[green]Doc-to-LoRA engine initialized.[/green]")
+    return True
+
+
 def handle_jitrl_mvp():
     if not _ensure_jitrl_mvp():
         return
@@ -632,6 +655,59 @@ def handle_ace_load_playbook():
     Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
 
 
+def handle_doc2lora_learn():
+    if not _ensure_doc2lora():
+        return
+
+    file_path = Prompt.ask("[bold green]Document path[/bold green]")
+    if not os.path.exists(file_path):
+        console.print(f"[red]File not found: {file_path}[/red]")
+        return
+
+    with open(file_path) as f:
+        text = f.read()
+
+    console.print(f"[cyan]Document loaded: {len(text)} characters[/cyan]")
+
+    def progress_callback(**kwargs):
+        console.print(f"  [dim]Chunks: {kwargs.get('num_chunks', 0)}, "
+                      f"Effective rank: {kwargs.get('effective_rank', 0)}[/dim]")
+
+    console.rule("[bold cyan]Doc-to-LoRA Learning...[/bold cyan]")
+    metrics = _doc2lora_engine.learn(text, callback=progress_callback)
+
+    console.print(f"\n[green]Doc-to-LoRA learning complete![/green]")
+    console.print(f"  Mode: {metrics['mode']}")
+    console.print(f"  Tokens processed: {metrics['tokens_processed']}")
+    console.print(f"  Chunks: {metrics['num_chunks']}")
+    console.print(f"  Effective LoRA rank: {metrics['effective_rank']}")
+    Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
+
+
+def handle_doc2lora_ask():
+    if not _ensure_doc2lora():
+        return
+
+    query = Prompt.ask("[bold green]Question[/bold green]")
+
+    with console.status("[cyan]Generating (Doc-to-LoRA)...[/cyan]"):
+        response = _doc2lora_engine.generate(query)
+
+    console.print(f"\n[bold cyan]Doc-to-LoRA[/bold cyan]: {response}\n")
+    Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
+
+
+def handle_doc2lora_mode():
+    if not _ensure_doc2lora():
+        return
+
+    current = _doc2lora_engine.mode
+    new_mode = "text" if current == "doc" else "doc"
+    _doc2lora_engine.set_mode(new_mode)
+    console.print(f"[green]Switched to '{new_mode}' mode.[/green]")
+    Prompt.ask("\n[dim]Press Enter to continue[/dim]", default="")
+
+
 def handle_compare_engines():
     if not ensure_model_loaded():
         return
@@ -715,6 +791,9 @@ MENU_HANDLERS = {
     "ace_ask": handle_ace_ask,
     "ace_save": handle_ace_save_playbook,
     "ace_load": handle_ace_load_playbook,
+    "doc2lora_learn": handle_doc2lora_learn,
+    "doc2lora_ask": handle_doc2lora_ask,
+    "doc2lora_mode": handle_doc2lora_mode,
 }
 
 
