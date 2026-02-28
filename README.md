@@ -139,11 +139,68 @@ Requires Ollama running locally (`ollama serve`).
 
 ### Doc-to-LoRA: Hypernetwork-Generated Adapters
 
+Doc-to-LoRA requires a HuggingFace account with access to [Gemma-2-2b-it](https://huggingface.co/google/gemma-2-2b-it). Before using it, log in:
+
+```bash
+huggingface-cli login
+```
+
+#### Doc Mode (Document → LoRA)
+
+Feed a document to the hypernetwork to generate LoRA adapters that encode its content:
+
+1. Launch `continual-learning` and select **Doc-to-LoRA: Learn Document**
+2. Provide a path to a `.txt` or `.md` file
+3. The engine chunks the document (1024 tokens/chunk), runs each chunk through the hypernetwork, and injects rank-8 LoRA adapters into the model
+4. Select **Doc-to-LoRA: Ask Question** and query the model about the document
+
+Multiple documents can be learned — each one adds LoRA adapters via rank concatenation (effective rank = 8 × number of chunks).
+
+#### Text Mode (Task Description → LoRA)
+
+Generate task-specialized LoRA adapters from a natural language instruction:
+
+1. Select **Doc-to-LoRA: Switch Mode** to toggle from `doc` to `text`
+2. Select **Doc-to-LoRA: Learn Document** and type a task description (e.g., "answer questions about quantum physics") instead of a file path — in text mode the full description is processed as a single chunk
+3. Select **Doc-to-LoRA: Ask Question** to query using the task-specialized adapters
+
+Switch back to `doc` mode at any time with **Doc-to-LoRA: Switch Mode**.
+
+#### Simulated Mode (No GPU / No Downloads)
+
+To experiment without downloading models, set `simulated: true` in `configs/default.yaml` under `doc2lora`. This uses a deterministic hash-seeded hypernetwork that produces consistent but non-meaningful LoRA weights — useful for testing the pipeline end-to-end.
+
+#### Python API
+
+```python
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from continual_learning.doc2lora import Doc2LoRAEngine
+
+# Load base model
+tokenizer = AutoTokenizer.from_pretrained("google/gemma-2-2b-it")
+model = AutoModelForCausalLM.from_pretrained(
+    "google/gemma-2-2b-it", torch_dtype="auto", device_map="auto"
+)
+
+# Doc mode: learn from a document
+engine = Doc2LoRAEngine(model=model, tokenizer=tokenizer, mode="doc")
+engine.learn(open("my_document.txt").read())
+print(engine.generate("What does the document say about X?"))
+
+# Text mode: specialize via task description
+engine.clear()
+engine.set_mode("text")
+engine.learn("Answer questions about quantum computing")
+print(engine.generate("What is quantum entanglement?"))
+```
+
+#### CLI Options Reference
+
 | CLI Option | What It Does |
 |---|---|
-| **Doc-to-LoRA: Learn document** | Feeds document through the frozen base model to extract activations, then runs the Perceiver hypernetwork to generate LoRA weight matrices and injects them into the model via peft. |
-| **Doc-to-LoRA: Ask question** | Generates a response using the LoRA-adapted model. The injected adapters encode the learned document's knowledge. |
-| **Doc-to-LoRA: Switch mode** | Toggles between doc mode (document content → LoRA) and text mode (task description → LoRA). |
+| **Doc-to-LoRA: Learn Document** | Chunks a document, generates LoRA adapters via hypernetwork, and injects them into the model. Reports tokens processed, chunk count, and effective LoRA rank. |
+| **Doc-to-LoRA: Ask Question** | Generates a response using the LoRA-adapted model. |
+| **Doc-to-LoRA: Switch Mode** | Toggles between `doc` mode (document content → LoRA) and `text` mode (task description → LoRA). |
 
 ### Comparing All Strategies
 
