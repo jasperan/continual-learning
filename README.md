@@ -10,7 +10,7 @@ A continual learning system that enables Small Language Models to learn from new
 
 ## How It Works
 
-This project implements four distinct continual learning strategies on top of Qwen2.5-1.5B:
+This project implements five distinct continual learning strategies on top of Qwen2.5-1.5B:
 
 ### Strategy 1: TTT-E2E (Test-Time Training End-to-End)
 
@@ -45,12 +45,27 @@ The playbook grows smarter with each loop: failures become strategies, successes
 
 **Tradeoff**: Requires Ollama running locally with a 7B+ model. No weight modification and no forgetting risk. Quality depends on the Ollama model's reasoning ability. Configurable loop count (default: 3 Generate-Reflect-Curate cycles).
 
+### Strategy 5: Doc-to-LoRA (Hypernetwork-Generated Adapters)
+
+A single-forward-pass approach to knowledge internalization. A **Perceiver-based hypernetwork** (8 cross-attention blocks) reads document activations from a frozen base model and directly outputs rank-8 LoRA weight matrices, which are injected into the model via peft. No gradient descent, no iterative fine-tuning — knowledge is written into LoRA adapters in one shot.
+
+The pipeline: Document → Chunker (1024-token chunks) → Frozen base model (extract activations) → Perceiver Hypernetwork → Rank-8 LoRA matrices → peft injection → Generate. Multiple chunks compose via rank concatenation.
+
+Two modes are supported:
+- **Doc mode**: Feed a document through the hypernetwork to generate LoRA adapters that encode the document's content.
+- **Text mode**: Provide a task description (e.g., "answer questions about quantum physics") and the hypernetwork generates task-specialized LoRA adapters.
+
+Based on Sakana AI research: [Doc-to-LoRA](https://arxiv.org/abs/2602.15902) and [Text-to-LoRA](https://arxiv.org/abs/2506.06105).
+
+**Tradeoff**: Requires HuggingFace model downloads (Gemma-2-2b-it + Sakana AI checkpoint; HuggingFace login required). Sub-second learn time. Generates LoRA adapters without traditional fine-tuning, but quality depends on the pretrained hypernetwork checkpoint.
+
 ## Requirements
 
 - Python 3.11+
 - NVIDIA GPU with 24GB+ VRAM (tested on A10) — for TTT-E2E and JitRL strategies
 - CUDA toolkit
 - [Ollama](https://ollama.com/) — required only for ACE strategy (install and `ollama pull qwen2.5:7b`)
+- [HuggingFace account](https://huggingface.co/) — required only for Doc-to-LoRA strategy (Gemma-2-2b-it model access + `huggingface-cli login`)
 
 ## Installation
 
@@ -122,11 +137,19 @@ Requires Ollama running locally (`ollama serve`).
 | **ACE Save Playbook** | Saves the current playbook (strategies + stats) to a named JSON file in the `playbooks/` directory. |
 | **ACE Load Playbook** | Loads a previously saved playbook by name, restoring its strategies for future generation. |
 
+### Doc-to-LoRA: Hypernetwork-Generated Adapters
+
+| CLI Option | What It Does |
+|---|---|
+| **Doc-to-LoRA: Learn document** | Feeds document through the frozen base model to extract activations, then runs the Perceiver hypernetwork to generate LoRA weight matrices and injects them into the model via peft. |
+| **Doc-to-LoRA: Ask question** | Generates a response using the LoRA-adapted model. The injected adapters encode the learned document's knowledge. |
+| **Doc-to-LoRA: Switch mode** | Toggles between doc mode (document content → LoRA) and text mode (task description → LoRA). |
+
 ### Comparing All Strategies
 
 | CLI Option | What It Does |
 |---|---|
-| **Compare All Engines** | A/B benchmarks across JitRL MVP, JitRL Full, and ACE on the same document and QA pairs. Provide a document path, then enter question/answer pairs. The harness feeds the same data to each engine and reports accuracy, learn time, eval time, and tokens learned in a comparison table. |
+| **Compare All Engines** | A/B benchmarks across JitRL MVP, JitRL Full, and ACE on the same document and QA pairs. Provide a document path, then enter question/answer pairs. The harness feeds the same data to each engine and reports accuracy, learn time, eval time, and tokens learned in a comparison table. Doc-to-LoRA can also be compared, though it uses a different base model (Gemma-2-2b-it). |
 
 ## Evaluation and Benchmarks
 
@@ -179,12 +202,20 @@ ace:
   num_loops: 3                           # Generate-Reflect-Curate cycles per learn
   playbook_dir: "playbooks"             # Directory for saved playbooks
   max_strategies: 50                     # Max strategies before FIFO eviction
+
+doc2lora:
+  base_model: "google/gemma-2-2b-it"    # Base model for Doc-to-LoRA
+  checkpoint: "SakanaAI/doc-to-lora"    # Pretrained hypernetwork checkpoint
+  lora_rank: 8                           # LoRA adapter rank
+  chunk_size: 1024                       # Tokens per document chunk
+  mode: "doc"                            # "doc" or "text" mode
+  simulated: false                       # Use simulated hypernetwork (no downloads)
 ```
 
 ## Running Tests
 
 ```bash
-# All 141 tests (~10 seconds, no GPU needed)
+# All 206 tests (~10 seconds, no GPU needed)
 python -m pytest tests/
 
 # By component
@@ -192,6 +223,7 @@ python -m pytest tests/test_model/          # DualMLP, modified Qwen, TF-IDF gat
 python -m pytest tests/test_training/       # TTT-E2E engine
 python -m pytest tests/test_jitrl/          # JitRL MVP, Full, comparison harness
 python -m pytest tests/test_ace/            # ACE engine, roles, playbook, adapter
+python -m pytest tests/test_doc2lora/       # Doc-to-LoRA engine, hypernetwork, chunker, trainer
 python -m pytest tests/test_evaluation/     # Benchmarks, forgetting metrics
 python -m pytest tests/test_data/           # SQuAD pipeline, Oracle docs
 python -m pytest tests/test_checkpointing/  # Checkpoint save/load
@@ -218,6 +250,17 @@ python scripts/validate_gpu.py
 #   - Tests each engine individually (learn time, generate time, response quality)
 #   - Runs comparison harness with 3 QA items, reports accuracy/timing side by side
 python scripts/validate_jitrl.py
+
+# Validates Doc-to-LoRA pipeline end-to-end:
+#   - Downloads Gemma-2-2b-it + Sakana AI hypernetwork checkpoint
+#   - Tests document chunking, activation extraction, LoRA generation and injection
+#   - Measures learn time and generation quality
+python scripts/validate_doc2lora.py
+
+# Trains hypernetwork from scratch (teacher-student distillation):
+#   - Uses SQuAD v2 + synthetic meta-training data
+#   - Trains Perceiver hypernetwork to generate LoRA adapters
+python scripts/train_hypernetwork.py
 ```
 
 ## Project Structure
@@ -256,6 +299,15 @@ src/continual_learning/
 │   ├── playbook.py          # Evolving strategy playbook with JSON persistence
 │   ├── ollama_client.py     # Thin sync HTTP client for Ollama /api/generate
 │   └── adapter.py           # Wraps ACEEngine as BaseJitRLEngine for comparison harness
+├── doc2lora/
+│   ├── engine.py            # Doc2LoRA engine (learn/generate/clear)
+│   ├── hypernetwork.py      # Perceiver hypernetwork + simulated fallback
+│   ├── lora_injector.py     # LoRA weight injection via peft
+│   ├── chunker.py           # Document chunking (1024-token chunks)
+│   ├── checkpoint_utils.py  # Download/cache HF checkpoints
+│   ├── meta_dataset.py      # SQuAD v2 + synthetic meta-training data
+│   ├── trainer.py           # Hypernetwork trainer (teacher-student distillation)
+│   └── evaluation.py        # QA accuracy, needle-in-haystack, forgetting evaluation
 ├── checkpointing/
 │   └── manager.py           # Saves/loads trainable weights, TF-IDF stats, alpha, metadata
 ├── cli/
