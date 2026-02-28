@@ -96,7 +96,7 @@ class TestHypernetworkTrainer:
         )
         loss = trainer.train_step("Oracle was founded in 1977.", "When was Oracle founded?")
         assert isinstance(loss, float)
-        assert loss >= 0
+        assert loss >= -1e-6  # KL div can be slightly negative due to float precision
         assert trainer.step == 1
 
     def test_train_step_updates_hypernetwork(self):
