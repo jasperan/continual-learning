@@ -184,7 +184,8 @@ model = AutoModelForCausalLM.from_pretrained(
 
 # Doc mode: learn from a document
 engine = Doc2LoRAEngine(model=model, tokenizer=tokenizer, mode="doc")
-engine.learn(open("my_document.txt").read())
+with open("my_document.txt") as f:
+    engine.learn(f.read())
 print(engine.generate("What does the document say about X?"))
 
 # Text mode: specialize via task description
