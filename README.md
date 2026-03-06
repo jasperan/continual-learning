@@ -64,7 +64,7 @@ Based on Sakana AI research: [Doc-to-LoRA](https://arxiv.org/abs/2602.15902) and
 - Python 3.11+
 - NVIDIA GPU with 24GB+ VRAM (tested on A10) — for TTT-E2E and JitRL strategies
 - CUDA toolkit
-- [Ollama](https://ollama.com/) — required only for ACE strategy (install and `ollama pull qwen2.5:7b`)
+- [Ollama](https://ollama.com/) — required only for ACE strategy (install and `ollama pull qwen3.5:9b`)
 - [HuggingFace account](https://huggingface.co/) — required only for Doc-to-LoRA strategy (Gemma-2-2b-it model access + `huggingface-cli login`)
 
 ## Installation
@@ -73,14 +73,41 @@ From PyPI:
 
 ```bash
 pip install continual-learning-slm
+# or
+uv add continual-learning-slm
 ```
 
-Or from source (for development):
+Or from source with uv:
 
 ```bash
 git clone https://github.com/jasperan/continual-learning.git
 cd continual-learning
-pip install -e ".[dev]"
+uv sync
+```
+
+## Development
+
+```bash
+# Sync dependencies
+uv sync
+
+# Run tests with coverage
+uv run pytest --cov=continual_learning
+
+# Lint code
+uv run ruff check .
+
+# Format code
+uv run ruff format .
+
+# Type check
+uv run ty check .
+
+# Add a new dependency
+uv add <package>
+
+# Add a dev dependency
+uv add --dev <package>
 ```
 
 ## Quick Start
@@ -255,7 +282,7 @@ tfidf_gate:
   calibration_samples: 2000    # Number of samples for IDF calibration
 
 ace:
-  ollama_model: "qwen2.5:7b"            # Ollama model for ACE roles
+  ollama_model: "qwen3.5:9b"            # Ollama model for ACE roles
   ollama_base_url: "http://localhost:11434"  # Ollama API endpoint
   num_loops: 3                           # Generate-Reflect-Curate cycles per learn
   playbook_dir: "playbooks"             # Directory for saved playbooks
@@ -274,22 +301,22 @@ doc2lora:
 
 ```bash
 # All 206 tests (~10 seconds, no GPU needed)
-python -m pytest tests/
+uv run pytest tests/
 
 # By component
-python -m pytest tests/test_model/          # DualMLP, modified Qwen, TF-IDF gate
-python -m pytest tests/test_training/       # TTT-E2E engine
-python -m pytest tests/test_jitrl/          # JitRL MVP, Full, comparison harness
-python -m pytest tests/test_ace/            # ACE engine, roles, playbook, adapter
-python -m pytest tests/test_doc2lora/       # Doc-to-LoRA engine, hypernetwork, chunker, trainer
-python -m pytest tests/test_evaluation/     # Benchmarks, forgetting metrics
-python -m pytest tests/test_data/           # SQuAD pipeline, Oracle docs
-python -m pytest tests/test_checkpointing/  # Checkpoint save/load
-python -m pytest tests/test_cli/            # CLI menu and handlers
-python -m pytest tests/test_config.py       # YAML config loading
+uv run pytest tests/test_model/          # DualMLP, modified Qwen, TF-IDF gate
+uv run pytest tests/test_training/       # TTT-E2E engine
+uv run pytest tests/test_jitrl/          # JitRL MVP, Full, comparison harness
+uv run pytest tests/test_ace/            # ACE engine, roles, playbook, adapter
+uv run pytest tests/test_doc2lora/       # Doc-to-LoRA engine, hypernetwork, chunker, trainer
+uv run pytest tests/test_evaluation/     # Benchmarks, forgetting metrics
+uv run pytest tests/test_data/           # SQuAD pipeline, Oracle docs
+uv run pytest tests/test_checkpointing/  # Checkpoint save/load
+uv run pytest tests/test_cli/            # CLI menu and handlers
+uv run pytest tests/test_config.py       # YAML config loading
 
 # Single test by name
-python -m pytest tests/test_model/test_dual_mlp.py -k "test_forward"
+uv run pytest tests/test_model/test_dual_mlp.py -k "test_forward"
 ```
 
 ## GPU Validation Scripts
