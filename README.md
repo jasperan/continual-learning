@@ -126,6 +126,25 @@ This launches the interactive CLI. The model downloads automatically (~3GB) on f
 4. Select **Run Benchmarks** - measure accuracy and forgetting ratio against SQuAD holdout data
 5. Select **Save Checkpoint** - persist the learned state for later
 
+## Tutorials
+
+Interactive Jupyter notebooks walk through each strategy step-by-step with concepts, code, and exercises:
+
+| Tutorial | Strategy | What You'll Learn |
+|----------|----------|-------------------|
+| [00 — Introduction](tutorials/00_introduction.ipynb) | Overview | Catastrophic forgetting, live demo, strategy comparison |
+| [01 — TTT-E2E](tutorials/01_ttt_e2e.ipynb) | Test-Time Training | DualMLP architecture, TF-IDF gating, alpha decay, checkpointing |
+| [02 — JitRL MVP](tutorials/02_jitrl_mvp.ipynb) | Retrieval-Augmented | TF-IDF retrieval, logit biasing, parameter tuning |
+| [03 — JitRL Full](tutorials/03_jitrl_full.ipynb) | Reward-Guided | Hidden-state embeddings, reward signals, MVP vs Full comparison |
+| [04 — ACE](tutorials/04_ace.ipynb) | Agentic Context | Generate-Reflect-Curate loops, playbook evolution |
+| [05 — Doc-to-LoRA](tutorials/05_doc2lora.ipynb) | Hypernetwork Adapters | LoRA math, hypernetworks, document chunking, task specialization |
+| [06 — Benchmark](tutorials/06_benchmark.ipynb) | Comparison | Side-by-side evaluation, decision guide, scaling analysis |
+
+```bash
+cd tutorials
+jupyter notebook 00_introduction.ipynb
+```
+
 ## Using Each Learning Strategy
 
 ### TTT-E2E: Weight-Based Learning
