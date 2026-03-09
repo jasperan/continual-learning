@@ -1,0 +1,42 @@
+[
+  {
+    "question": "What year was the quantum computing research division founded?",
+    "answer": "2019"
+  },
+  {
+    "question": "Who led the initial research team?",
+    "answer": "Dr. Sarah Chen"
+  },
+  {
+    "question": "What was the name of the internal quantum circuit simulation framework?",
+    "answer": "QubitFlow"
+  },
+  {
+    "question": "Which organization did Oracle Labs partner with for post-quantum cryptography?",
+    "answer": "The National Institute of Standards and Technology (NIST)"
+  },
+  {
+    "question": "What was the name of the lattice-based encryption protocol?",
+    "answer": "Lattice Shield"
+  },
+  {
+    "question": "How many qubits did the RedShift processor have?",
+    "answer": "72"
+  },
+  {
+    "question": "What quantum volume did the RedShift processor achieve?",
+    "answer": "512"
+  },
+  {
+    "question": "How many researchers were in the division by the end of 2024?",
+    "answer": "95"
+  },
+  {
+    "question": "What is the target number of logical qubits for the 2028 system?",
+    "answer": "1000"
+  },
+  {
+    "question": "Where was the division's first facility located?",
+    "answer": "Austin, Texas"
+  }
+]
