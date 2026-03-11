@@ -8,6 +8,17 @@
 
 A continual learning system that enables Small Language Models to learn from new documents in real-time by updating neural weights at inference time, without catastrophic forgetting.
 
+## Visual Overview
+
+Interactive visual guides are available in the [`assets/`](assets/) directory:
+
+| Resource | Description |
+|----------|-------------|
+| [Architecture Overview](assets/architecture-overview.html) | Interactive deep-dive into the DualMLP architecture, all five learning strategies with data flow pipelines, strategy comparison table, and full project map |
+| [Strategy Slides](assets/strategy-slides.html) | Magazine-quality slide deck presenting the problem of catastrophic forgetting, the DualMLP solution, and each of the five strategies with pipeline visualizations |
+
+Open either file in a browser for the full interactive experience. The architecture overview includes a navigable sidebar TOC, and the slide deck supports keyboard navigation (arrow keys, space), touch/swipe, and nav dots.
+
 ## How It Works
 
 This project implements five distinct continual learning strategies on top of Qwen2.5-1.5B:

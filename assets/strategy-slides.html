@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continual Learning SLM — Strategy Deck</title>
+
+    <!-- Fonts: Cormorant (elegant serif display) + IBM Plex Sans (precise body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===========================================
+           CSS CUSTOM PROPERTIES — Deep Midnight + Gold
+           =========================================== */
+        :root {
+            --bg-primary: #080d1a;
+            --bg-secondary: #0e1528;
+            --bg-card: #121a30;
+            --bg-card-elevated: #182240;
+            --text-primary: #e8ecf5;
+            --text-secondary: #7d8ba0;
+            --accent: #d4a73a;
+            --accent-glow: rgba(212, 167, 58, 0.25);
+            --accent-dim: rgba(212, 167, 58, 0.10);
+            --blue: #3b82f6;
+            --blue-dim: rgba(59, 130, 246, 0.12);
+            --teal: #14b8a6;
+            --teal-dim: rgba(20, 184, 166, 0.10);
+            --emerald: #10b981;
+            --emerald-dim: rgba(16, 185, 129, 0.10);
+            --amber: #f59e0b;
+            --amber-dim: rgba(245, 158, 11, 0.10);
+            --rose: #f43f5e;
+            --rose-dim: rgba(244, 63, 94, 0.10);
+
+            --font-display: 'Cormorant', Georgia, serif;
+            --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+            --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+
+            --title-size: clamp(2.2rem, 6vw, 5rem);
+            --h2-size: clamp(1.5rem, 4vw, 3rem);
+            --h3-size: clamp(1.1rem, 2.5vw, 1.6rem);
+            --subtitle-size: clamp(0.8rem, 1.8vw, 1.15rem);
+            --body-size: clamp(0.72rem, 1.3vw, 1rem);
+            --small-size: clamp(0.6rem, 0.9vw, 0.8rem);
+
+            --slide-padding: clamp(1.5rem, 4vw, 4rem);
+            --content-gap: clamp(0.8rem, 2vw, 2rem);
+            --element-gap: clamp(0.25rem, 1vw, 1rem);
+
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-normal: 0.7s;
+        }
+
+        /* ===========================================
+           RESET
+           =========================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ===========================================
+           VIEWPORT FITTING: MANDATORY BASE STYLES
+           =========================================== */
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+        }
+        .card, .container, .content-box {
+            max-width: min(90vw, 1000px);
+            max-height: min(80vh, 700px);
+        }
+        .feature-list, .bullet-list {
+            gap: clamp(0.4rem, 1vh, 1rem);
+        }
+        .feature-list li, .bullet-list li {
+            font-size: var(--body-size);
+            line-height: 1.4;
+        }
+        img, .image-container {
+            max-width: 100%;
+            max-height: min(50vh, 400px);
+            object-fit: contain;
+        }
+
+        @media (max-height: 700px) {
+            :root {
+                --slide-padding: clamp(0.75rem, 3vw, 2rem);
+                --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+                --title-size: clamp(1.5rem, 5vw, 3rem);
+                --h2-size: clamp(1.2rem, 3.5vw, 2rem);
+            }
+        }
+        @media (max-height: 600px) {
+            :root {
+                --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+                --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+                --title-size: clamp(1.2rem, 4.5vw, 2rem);
+                --body-size: clamp(0.65rem, 1.1vw, 0.9rem);
+            }
+            .nav-dots, .keyboard-hint, .decorative { display: none; }
+        }
+        @media (max-height: 500px) {
+            :root {
+                --slide-padding: clamp(0.4rem, 2vw, 1rem);
+                --title-size: clamp(1rem, 4vw, 1.5rem);
+                --h2-size: clamp(0.9rem, 3vw, 1.25rem);
+                --body-size: clamp(0.6rem, 1vw, 0.8rem);
+            }
+        }
+        @media (max-width: 600px) {
+            :root { --title-size: clamp(1.5rem, 8vw, 3rem); }
+            .strat-grid { grid-template-columns: 1fr !important; }
+            .split-content { flex-direction: column !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+            html { scroll-behavior: auto; }
+        }
+
+        /* ===========================================
+           BODY + BACKGROUND
+           =========================================== */
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-weight: 400;
+        }
+
+        /* ===========================================
+           ANIMATIONS
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.92);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+        .slide.visible .reveal,
+        .slide.visible .reveal-scale {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        .reveal:nth-child(1) { transition-delay: 0.08s; }
+        .reveal:nth-child(2) { transition-delay: 0.18s; }
+        .reveal:nth-child(3) { transition-delay: 0.28s; }
+        .reveal:nth-child(4) { transition-delay: 0.38s; }
+        .reveal:nth-child(5) { transition-delay: 0.48s; }
+        .reveal:nth-child(6) { transition-delay: 0.58s; }
+
+        /* ===========================================
+           PROGRESS BAR
+           =========================================== */
+        .progress-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--blue));
+            z-index: 1000;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        /* ===========================================
+           NAV DOTS
+           =========================================== */
+        .nav-dots {
+            position: fixed;
+            right: clamp(12px, 2vw, 24px);
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+        .nav-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            border: 1px solid var(--text-secondary);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 0;
+        }
+        .nav-dot.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+        .nav-dot:hover { border-color: var(--accent); }
+
+        /* ===========================================
+           SLIDE COUNTER
+           =========================================== */
+        .slide-counter {
+            position: absolute;
+            bottom: clamp(12px, 2vw, 24px);
+            right: clamp(12px, 2vw, 24px);
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        /* ===========================================
+           TITLE SLIDE
+           =========================================== */
+        .title-slide {
+            background:
+                radial-gradient(ellipse at 25% 85%, var(--accent-dim) 0%, transparent 50%),
+                radial-gradient(ellipse at 75% 15%, var(--blue-dim) 0%, transparent 45%),
+                var(--bg-primary);
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .title-slide .slide-content {
+            align-items: center;
+            max-width: min(85vw, 900px);
+        }
+        .title-slide h1 {
+            font-family: var(--font-display);
+            font-size: var(--title-size);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.05;
+            margin-bottom: clamp(0.5rem, 1.5vw, 1.2rem);
+        }
+        .title-slide h1 .gold { color: var(--accent); }
+        .title-slide .tagline {
+            font-size: var(--subtitle-size);
+            color: var(--text-secondary);
+            font-weight: 300;
+            letter-spacing: 0.03em;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+        .title-slide .meta {
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            color: var(--text-secondary);
+            opacity: 0.6;
+            margin-top: clamp(1rem, 3vw, 2.5rem);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .title-line {
+            width: clamp(40px, 8vw, 80px);
+            height: 2px;
+            background: var(--accent);
+            margin: clamp(0.6rem, 1.5vw, 1.2rem) auto;
+            border: none;
+        }
+
+        /* ===========================================
+           CONTENT SLIDES
+           =========================================== */
+        .content-slide {
+            background:
+                radial-gradient(ellipse at 10% 90%, rgba(59, 130, 246, 0.04) 0%, transparent 40%),
+                var(--bg-primary);
+        }
+        .content-slide .slide-content {
+            max-width: min(90vw, 1100px);
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            margin-bottom: clamp(0.3rem, 0.8vw, 0.6rem);
+        }
+
+        .slide-title {
+            font-family: var(--font-display);
+            font-size: var(--h2-size);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin-bottom: clamp(0.5rem, 1.5vw, 1.2rem);
+            line-height: 1.15;
+        }
+
+        .slide-body {
+            font-size: var(--body-size);
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 720px;
+        }
+
+        /* ===========================================
+           STRATEGY CARDS
+           =========================================== */
+        .strat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: clamp(0.5rem, 1.2vw, 1rem);
+            margin-top: clamp(0.5rem, 1.2vw, 1rem);
+        }
+        .strat-grid.three-col {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .strat-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: clamp(6px, 1vw, 12px);
+            padding: clamp(0.6rem, 1.5vw, 1.2rem);
+            transition: border-color 0.25s;
+        }
+        .strat-card:hover { border-color: rgba(255,255,255,0.12); }
+
+        .strat-card .num {
+            font-family: var(--font-display);
+            font-size: clamp(1.2rem, 2.5vw, 2rem);
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: clamp(0.2rem, 0.5vw, 0.4rem);
+        }
+        .strat-card .name {
+            font-weight: 600;
+            font-size: clamp(0.75rem, 1.3vw, 1rem);
+            margin-bottom: clamp(0.15rem, 0.4vw, 0.3rem);
+        }
+        .strat-card .sub {
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            color: var(--text-secondary);
+        }
+        .strat-card .desc {
+            font-size: var(--small-size);
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-top: clamp(0.2rem, 0.5vw, 0.5rem);
+        }
+
+        /* ===========================================
+           DUAL MLP VISUAL
+           =========================================== */
+        .dual-vis {
+            display: flex;
+            align-items: center;
+            gap: clamp(0.8rem, 2vw, 2rem);
+            margin-top: clamp(0.5rem, 1.5vw, 1.2rem);
+        }
+        .mlp-box {
+            flex: 1;
+            padding: clamp(0.8rem, 1.5vw, 1.4rem);
+            border-radius: clamp(6px, 1vw, 12px);
+            text-align: center;
+        }
+        .mlp-box.frozen {
+            background: var(--blue-dim);
+            border: 2px solid var(--blue);
+        }
+        .mlp-box.trainable {
+            background: var(--accent-dim);
+            border: 2px dashed var(--accent);
+        }
+        .mlp-box .label {
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: clamp(0.2rem, 0.5vw, 0.4rem);
+        }
+        .mlp-box.frozen .label { color: var(--blue); }
+        .mlp-box.trainable .label { color: var(--accent); }
+        .mlp-box .detail {
+            font-size: var(--small-size);
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        .blend-center {
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .formula-box {
+            font-family: var(--font-mono);
+            font-size: clamp(0.7rem, 1.2vw, 0.95rem);
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: clamp(0.4rem, 1vw, 0.8rem) clamp(0.6rem, 1.5vw, 1.2rem);
+            color: var(--text-primary);
+            margin-top: clamp(0.2rem, 0.5vw, 0.4rem);
+        }
+
+        /* Layer strip */
+        .layer-strip {
+            display: flex;
+            gap: 2px;
+            margin-top: clamp(0.5rem, 1vw, 0.8rem);
+            align-items: end;
+        }
+        .lbar {
+            flex: 1;
+            border-radius: 2px 2px 0 0;
+        }
+        .lbar.f { height: clamp(14px, 2vh, 20px); background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06); }
+        .lbar.m { height: clamp(22px, 3.5vh, 32px); background: var(--accent-dim); border: 1px solid var(--accent); }
+        .layer-legend {
+            display: flex;
+            gap: clamp(0.8rem, 2vw, 1.5rem);
+            margin-top: clamp(0.3rem, 0.6vw, 0.5rem);
+            justify-content: center;
+        }
+        .layer-legend span {
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legend-dot {
+            width: clamp(8px, 1vw, 12px);
+            height: clamp(6px, 0.8vw, 8px);
+            border-radius: 2px;
+            display: inline-block;
+        }
+
+        /* ===========================================
+           PIPELINE VIS
+           =========================================== */
+        .pipeline {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-top: clamp(0.4rem, 1vw, 0.8rem);
+            overflow-x: auto;
+        }
+        .p-step {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: clamp(4px, 0.8vw, 8px);
+            padding: clamp(0.4rem, 0.8vw, 0.7rem) clamp(0.5rem, 1vw, 0.9rem);
+            min-width: clamp(70px, 10vw, 110px);
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .p-step .p-label {
+            font-family: var(--font-mono);
+            font-size: clamp(0.5rem, 0.7vw, 0.65rem);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 2px;
+        }
+        .p-step .p-name {
+            font-size: var(--small-size);
+            font-weight: 600;
+        }
+        .p-step .p-detail {
+            font-size: clamp(0.5rem, 0.7vw, 0.6rem);
+            color: var(--text-secondary);
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        .p-arrow {
+            font-size: clamp(0.8rem, 1.2vw, 1.1rem);
+            color: rgba(255,255,255,0.15);
+            padding: 0 clamp(2px, 0.4vw, 6px);
+            flex-shrink: 0;
+        }
+
+        /* ===========================================
+           COMPARISON TABLE
+           =========================================== */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: clamp(6px, 1vw, 12px);
+            border: 1px solid rgba(255,255,255,0.06);
+            margin-top: clamp(0.5rem, 1.2vw, 1rem);
+        }
+        table.cmp {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: var(--small-size);
+        }
+        table.cmp thead th {
+            font-family: var(--font-mono);
+            font-size: clamp(0.5rem, 0.75vw, 0.7rem);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            padding: clamp(0.4rem, 0.8vw, 0.7rem) clamp(0.5rem, 1vw, 0.9rem);
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        table.cmp tbody td {
+            padding: clamp(0.35rem, 0.7vw, 0.6rem) clamp(0.5rem, 1vw, 0.9rem);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            vertical-align: top;
+        }
+        table.cmp tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+        table.cmp tbody tr:hover { background: rgba(255,255,255,0.04); }
+
+        .tag {
+            font-family: var(--font-mono);
+            font-size: clamp(0.5rem, 0.7vw, 0.65rem);
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 3px;
+        }
+        .tag-low { background: var(--emerald-dim); color: var(--emerald); }
+        .tag-med { background: var(--amber-dim); color: var(--amber); }
+
+        /* ===========================================
+           SPLIT LAYOUT
+           =========================================== */
+        .split-content {
+            display: flex;
+            gap: clamp(1rem, 3vw, 3rem);
+            align-items: center;
+        }
+        .split-content > * { flex: 1; min-width: 0; }
+
+        /* ===========================================
+           CODE STYLE
+           =========================================== */
+        code {
+            font-family: var(--font-mono);
+            font-size: clamp(0.6rem, 0.9vw, 0.8rem);
+            background: var(--accent-dim);
+            color: var(--accent);
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+
+        /* ===========================================
+           CALLOUT
+           =========================================== */
+        .callout {
+            background: var(--bg-card);
+            border-left: 2px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            padding: clamp(0.5rem, 1vw, 0.8rem) clamp(0.6rem, 1.2vw, 1rem);
+            font-size: var(--small-size);
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-top: clamp(0.4rem, 1vw, 0.8rem);
+        }
+        .callout strong { color: var(--text-primary); }
+
+        /* ===========================================
+           ABSTRACT DECORATIVE SHAPES
+           =========================================== */
+        .deco-circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        /* File tree */
+        .file-tree {
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+        .file-tree .dir { color: var(--accent); font-weight: 500; }
+        .file-tree .desc { color: var(--text-secondary); opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+    <!-- Progress bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Navigation dots -->
+    <nav class="nav-dots" id="navDots"></nav>
+
+    <!-- =========================================
+         SLIDE 1: TITLE
+         ========================================= -->
+    <section class="slide title-slide" data-title="Title">
+        <div class="deco-circle decorative" style="width:clamp(200px,40vw,500px);height:clamp(200px,40vw,500px);background:var(--accent);top:-15%;right:-10%;"></div>
+        <div class="deco-circle decorative" style="width:clamp(120px,25vw,300px);height:clamp(120px,25vw,300px);background:var(--blue);bottom:-8%;left:-5%;"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">Qwen2.5-1.5B</div>
+            <h1 class="reveal">Continual Learning<br><span class="gold">SLM</span></h1>
+            <hr class="title-line reveal">
+            <p class="tagline reveal">Real-time knowledge internalization for Small Language Models — five strategies from weight modification to zero-update agentic loops</p>
+            <p class="meta reveal">PyPI: continual-learning-slm &middot; MIT License &middot; 206 Tests</p>
+        </div>
+        <div class="slide-counter">01 / 10</div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 2: THE PROBLEM
+         ========================================= -->
+    <section class="slide content-slide" data-title="The Problem">
+        <div class="deco-circle decorative" style="width:clamp(150px,30vw,350px);height:clamp(150px,30vw,350px);background:var(--rose);top:10%;right:-8%;"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">The Problem</div>
+            <h2 class="slide-title reveal">Catastrophic<br>Forgetting</h2>
+            <p class="slide-body reveal" style="margin-bottom:var(--content-gap);">When neural networks learn new information through gradient descent, they overwrite existing knowledge. A model fine-tuned on medical text forgets how to write code. One trained on legal docs loses conversational ability.</p>
+
+            <div class="strat-grid reveal" style="grid-template-columns: repeat(3, 1fr); max-width: 700px;">
+                <div class="strat-card" style="border-left: 2px solid var(--rose);">
+                    <div class="name" style="color:var(--rose)">Overwriting</div>
+                    <div class="desc">New gradients destroy old weight patterns</div>
+                </div>
+                <div class="strat-card" style="border-left: 2px solid var(--amber);">
+                    <div class="name" style="color:var(--amber)">No Isolation</div>
+                    <div class="desc">All weights shared between old and new tasks</div>
+                </div>
+                <div class="strat-card" style="border-left: 2px solid var(--emerald);">
+                    <div class="name" style="color:var(--emerald)">Our Goal</div>
+                    <div class="desc">Learn at inference time, preserve existing knowledge</div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-counter">02 / 10</div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 3: DUAL MLP ARCHITECTURE
+         ========================================= -->
+    <section class="slide content-slide" data-title="DualMLP">
+        <div class="slide-content">
+            <div class="section-label reveal">Core Architecture</div>
+            <h2 class="slide-title reveal">DualMLP Injection</h2>
+            <p class="slide-body reveal">Layers 21&ndash;27 of Qwen2.5-1.5B get a frozen MLP + trainable MLP, blended via alpha.</p>
+
+            <div class="dual-vis reveal">
+                <div class="mlp-box frozen">
+                    <div class="label">Frozen MLP</div>
+                    <div class="detail">Original weights<br>General knowledge</div>
+                </div>
+                <div class="blend-center">
+                    <div style="font-size:var(--small-size); color:var(--text-secondary);">blended via</div>
+                    <div class="formula-box">&alpha; &middot; frozen + (1&minus;&alpha;) &middot; trainable</div>
+                </div>
+                <div class="mlp-box trainable">
+                    <div class="label">Trainable MLP</div>
+                    <div class="detail">std=0.001 init<br>New knowledge</div>
+                </div>
+            </div>
+
+            <div class="reveal" style="margin-top:var(--content-gap);">
+                <div class="layer-strip">
+                    <div class="lbar f"></div><div class="lbar f"></div><div class="lbar f"></div>
+                    <div class="lbar f"></div><div class="lbar f"></div><div class="lbar f"></div>
+                    <div class="lbar f"></div><div class="lbar f"></div><div class="lbar f"></div>
+                    <div class="lbar f"></div><div class="lbar f"></div><div class="lbar f"></div>
+                    <div class="lbar f"></div><div class="lbar f"></div><div class="lbar f"></div>
+                    <div class="lbar f"></div><div class="lbar f"></div><div class="lbar f"></div>
+                    <div class="lbar f"></div><div class="lbar f"></div><div class="lbar f"></div>
+                    <div class="lbar m"></div><div class="lbar m"></div><div class="lbar m"></div>
+                    <div class="lbar m"></div><div class="lbar m"></div><div class="lbar m"></div>
+                    <div class="lbar m"></div>
+                </div>
+                <div class="layer-legend">
+                    <span><span class="legend-dot" style="background:var(--bg-card);border:1px solid rgba(255,255,255,0.06);"></span>Frozen (0&ndash;20)</span>
+                    <span><span class="legend-dot" style="background:var(--accent-dim);border:1px solid var(--accent);"></span>DualMLP (21&ndash;27)</span>
+                </div>
+            </div>
+        </div>
+        <div class="slide-counter">03 / 10</div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 4: TTT-E2E
+         ========================================= -->
+    <section class="slide content-slide" data-title="TTT-E2E">
+        <div class="deco-circle decorative" style="width:clamp(100px,20vw,250px);height:clamp(100px,20vw,250px);background:var(--blue);bottom:5%;right:5%;"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">Strategy 01</div>
+            <h2 class="slide-title reveal" style="color:var(--blue);">TTT-E2E</h2>
+            <p class="slide-body reveal">Test-Time Training End-to-End. Direct weight modification via mini-batch gradient descent with TF-IDF sparse memory gating.</p>
+
+            <div class="pipeline reveal">
+                <div class="p-step" style="border-color:var(--blue-dim);">
+                    <div class="p-label" style="color:var(--blue);">Input</div>
+                    <div class="p-name">Document</div>
+                    <div class="p-detail">.txt / .md / .jsonl</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--blue-dim);">
+                    <div class="p-label" style="color:var(--blue);">Tokenize</div>
+                    <div class="p-name">Mini-Batches</div>
+                    <div class="p-detail">32 tokens each</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--accent-dim);">
+                    <div class="p-label" style="color:var(--accent);">Train</div>
+                    <div class="p-name">Gradient Descent</div>
+                    <div class="p-detail">TF-IDF masked</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--accent-dim);">
+                    <div class="p-label" style="color:var(--accent);">Update</div>
+                    <div class="p-name">&alpha; Decay</div>
+                    <div class="p-detail">&alpha; -= 0.01/step</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--emerald-dim);">
+                    <div class="p-label" style="color:var(--emerald);">Query</div>
+                    <div class="p-name">Generate</div>
+                    <div class="p-detail">Knowledge in weights</div>
+                </div>
+            </div>
+
+            <div class="callout reveal">
+                <strong>TF-IDF Gating</strong> &mdash; Protects general-purpose neurons by masking their gradients during backprop. Only document-specific neurons receive full updates. Threshold: 0.3, calibrated on 2,000 samples.
+            </div>
+        </div>
+        <div class="slide-counter">04 / 10</div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 5: JitRL MVP
+         ========================================= -->
+    <section class="slide content-slide" data-title="JitRL MVP">
+        <div class="slide-content">
+            <div class="section-label reveal">Strategy 02</div>
+            <h2 class="slide-title reveal" style="color:var(--teal);">JitRL MVP</h2>
+            <p class="slide-body reveal">Just-in-Time Retrieval Learning. Lightweight TF-IDF retrieval + logit biasing. No weight modification — zero forgetting risk.</p>
+
+            <div class="pipeline reveal">
+                <div class="p-step" style="border-color:var(--teal-dim);">
+                    <div class="p-label" style="color:var(--teal);">Index</div>
+                    <div class="p-name">TF-IDF Chunks</div>
+                    <div class="p-detail">~0.002s</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--teal-dim);">
+                    <div class="p-label" style="color:var(--teal);">Query</div>
+                    <div class="p-name">Retrieve Top-3</div>
+                    <div class="p-detail">Cosine similarity</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--amber-dim);">
+                    <div class="p-label" style="color:var(--amber);">Augment</div>
+                    <div class="p-name">Context + Bias</div>
+                    <div class="p-detail">Prepend + logit bias</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--emerald-dim);">
+                    <div class="p-label" style="color:var(--emerald);">Output</div>
+                    <div class="p-name">Generate</div>
+                    <div class="p-detail">~2.4s response</div>
+                </div>
+            </div>
+
+            <div class="strat-grid reveal" style="grid-template-columns: repeat(3,1fr); max-width: 600px; margin-top: var(--content-gap);">
+                <div class="strat-card" style="text-align:center;">
+                    <div class="num" style="color:var(--teal);">0.002s</div>
+                    <div class="sub">Learn time</div>
+                </div>
+                <div class="strat-card" style="text-align:center;">
+                    <div class="num" style="color:var(--teal);">2.4s</div>
+                    <div class="sub">Generate time</div>
+                </div>
+                <div class="strat-card" style="text-align:center;">
+                    <div class="num" style="color:var(--emerald);">0%</div>
+                    <div class="sub">Forgetting</div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-counter">05 / 10</div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 6: JitRL Full
+         ========================================= -->
+    <section class="slide content-slide" data-title="JitRL Full">
+        <div class="deco-circle decorative" style="width:clamp(100px,18vw,200px);height:clamp(100px,18vw,200px);background:var(--emerald);top:8%;right:3%;"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">Strategy 03</div>
+            <h2 class="slide-title reveal" style="color:var(--emerald);">JitRL Full</h2>
+            <p class="slide-body reveal">Reward-Guided Logit Modulation. Documents encoded into hidden-state embeddings in a knowledge store. Cosine similarity retrieval computes a reward signal that modulates logit distribution.</p>
+
+            <div class="pipeline reveal">
+                <div class="p-step" style="border-color:var(--emerald-dim);">
+                    <div class="p-label" style="color:var(--emerald);">Encode</div>
+                    <div class="p-name">Hidden States</div>
+                    <div class="p-detail">Full model pass</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--emerald-dim);">
+                    <div class="p-label" style="color:var(--emerald);">Store</div>
+                    <div class="p-name">Knowledge Store</div>
+                    <div class="p-detail">Embedding vectors</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--amber-dim);">
+                    <div class="p-label" style="color:var(--amber);">Retrieve</div>
+                    <div class="p-name">Cosine Sim</div>
+                    <div class="p-detail">Nearest embeddings</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--accent-dim);">
+                    <div class="p-label" style="color:var(--accent);">Modulate</div>
+                    <div class="p-name">Reward &rarr; Logits</div>
+                    <div class="p-detail">LM head projection</div>
+                </div>
+            </div>
+
+            <div class="callout reveal">
+                <strong>Tradeoff:</strong> More expressive than MVP but slower (~0.04s learn, ~33s generate). Currently less accurate — needs hyperparameter tuning. No weight modification, zero forgetting.
+            </div>
+        </div>
+        <div class="slide-counter">06 / 10</div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 7: ACE
+         ========================================= -->
+    <section class="slide content-slide" data-title="ACE">
+        <div class="slide-content">
+            <div class="section-label reveal">Strategy 04</div>
+            <h2 class="slide-title reveal" style="color:var(--amber);">ACE</h2>
+            <p class="slide-body reveal">Agentic Context Engineering. Zero weight updates. Evolves a <em>playbook</em> of answering strategies through iterative self-improvement loops powered by Ollama.</p>
+
+            <div class="pipeline reveal">
+                <div class="p-step" style="border-color:var(--amber-dim);">
+                    <div class="p-label" style="color:var(--amber);">Generate</div>
+                    <div class="p-name">Answer</div>
+                    <div class="p-detail">Using playbook</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--rose-dim);">
+                    <div class="p-label" style="color:var(--rose);">Reflect</div>
+                    <div class="p-name">Critique</div>
+                    <div class="p-detail">What went wrong?</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--emerald-dim);">
+                    <div class="p-label" style="color:var(--emerald);">Curate</div>
+                    <div class="p-name">Patch Playbook</div>
+                    <div class="p-detail">Targeted updates</div>
+                </div>
+                <div class="p-arrow">&circlearrowleft;</div>
+                <div class="p-step" style="border-color:var(--accent-dim);">
+                    <div class="p-label" style="color:var(--accent);">Repeat</div>
+                    <div class="p-name">3 Loops</div>
+                    <div class="p-detail">Playbook evolves</div>
+                </div>
+            </div>
+
+            <div class="strat-grid reveal" style="grid-template-columns: repeat(2,1fr); max-width: 500px; margin-top: var(--content-gap);">
+                <div class="strat-card">
+                    <div class="name">Failures &rarr; Strategies</div>
+                    <div class="desc">Every mistake becomes a new rule</div>
+                </div>
+                <div class="strat-card">
+                    <div class="name">JSON Persistence</div>
+                    <div class="desc">Playbooks save/load across sessions</div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-counter">07 / 10</div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 8: Doc-to-LoRA
+         ========================================= -->
+    <section class="slide content-slide" data-title="Doc-to-LoRA">
+        <div class="deco-circle decorative" style="width:clamp(120px,22vw,280px);height:clamp(120px,22vw,280px);background:var(--rose);bottom:5%;left:-5%;"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">Strategy 05</div>
+            <h2 class="slide-title reveal" style="color:var(--rose);">Doc-to-LoRA</h2>
+            <p class="slide-body reveal">A Perceiver-based hypernetwork (8 cross-attention blocks) reads document activations and outputs rank-8 LoRA matrices in a single forward pass. No gradient descent needed.</p>
+
+            <div class="pipeline reveal">
+                <div class="p-step" style="border-color:var(--rose-dim);">
+                    <div class="p-label" style="color:var(--rose);">Chunk</div>
+                    <div class="p-name">1024 Tokens</div>
+                    <div class="p-detail">Fixed-size splits</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--rose-dim);">
+                    <div class="p-label" style="color:var(--rose);">Extract</div>
+                    <div class="p-name">Activations</div>
+                    <div class="p-detail">Frozen Gemma-2</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--accent-dim);">
+                    <div class="p-label" style="color:var(--accent);">Perceiver</div>
+                    <div class="p-name">Hypernetwork</div>
+                    <div class="p-detail">8 cross-attn blocks</div>
+                </div>
+                <div class="p-arrow">&rarr;</div>
+                <div class="p-step" style="border-color:var(--emerald-dim);">
+                    <div class="p-label" style="color:var(--emerald);">Inject</div>
+                    <div class="p-name">peft LoRA</div>
+                    <div class="p-detail">Rank-8 adapters</div>
+                </div>
+            </div>
+
+            <div class="strat-grid reveal" style="grid-template-columns: repeat(2,1fr); max-width: 500px; margin-top: var(--content-gap);">
+                <div class="strat-card" style="text-align:center;">
+                    <div class="num" style="color:var(--rose);">&lt;1s</div>
+                    <div class="sub">Learn time</div>
+                </div>
+                <div class="strat-card" style="text-align:center;">
+                    <div class="name">Two modes</div>
+                    <div class="desc"><code>doc</code> content &rarr; LoRA<br><code>text</code> task desc &rarr; LoRA</div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-counter">08 / 10</div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 9: COMPARISON
+         ========================================= -->
+    <section class="slide content-slide" data-title="Comparison">
+        <div class="slide-content">
+            <div class="section-label reveal">Head to Head</div>
+            <h2 class="slide-title reveal">Strategy Comparison</h2>
+
+            <div class="table-wrap reveal">
+                <table class="cmp">
+                    <thead>
+                        <tr>
+                            <th>Strategy</th>
+                            <th>Approach</th>
+                            <th>Learn</th>
+                            <th>Generate</th>
+                            <th>Forgetting</th>
+                            <th>Requires</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong style="color:var(--blue)">TTT-E2E</strong></td>
+                            <td>Weight modification</td>
+                            <td><code>~secs</code></td>
+                            <td><code>standard</code></td>
+                            <td><span class="tag tag-low">LOW</span></td>
+                            <td>GPU 24GB+</td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color:var(--teal)">JitRL MVP</strong></td>
+                            <td>TF-IDF retrieval</td>
+                            <td><code>~0.002s</code></td>
+                            <td><code>~2.4s</code></td>
+                            <td><span class="tag tag-low">NONE</span></td>
+                            <td>GPU (inference)</td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color:var(--emerald)">JitRL Full</strong></td>
+                            <td>Knowledge store</td>
+                            <td><code>~0.04s</code></td>
+                            <td><code>~33s</code></td>
+                            <td><span class="tag tag-low">NONE</span></td>
+                            <td>GPU (inference)</td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color:var(--amber)">ACE</strong></td>
+                            <td>Playbook evolution</td>
+                            <td><code>~mins</code></td>
+                            <td><code>~secs</code></td>
+                            <td><span class="tag tag-low">NONE</span></td>
+                            <td>Ollama + 7B</td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color:var(--rose)">Doc-to-LoRA</strong></td>
+                            <td>Hypernetwork &rarr; LoRA</td>
+                            <td><code>&lt;1s</code></td>
+                            <td><code>standard</code></td>
+                            <td><span class="tag tag-med">ADAPTER</span></td>
+                            <td>HuggingFace + GPU</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="callout reveal">
+                <strong>TTT-E2E</strong> for deep internalization.
+                <strong>JitRL MVP</strong> for fast, safe retrieval.
+                <strong>ACE</strong> for iterative quality refinement.
+                <strong>Doc-to-LoRA</strong> for sub-second adapter generation.
+            </div>
+        </div>
+        <div class="slide-counter">09 / 10</div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 10: PROJECT & GETTING STARTED
+         ========================================= -->
+    <section class="slide content-slide" data-title="Get Started">
+        <div class="deco-circle decorative" style="width:clamp(100px,18vw,220px);height:clamp(100px,18vw,220px);background:var(--accent);top:5%;right:3%;"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">Getting Started</div>
+            <h2 class="slide-title reveal">Project Structure</h2>
+
+            <div class="split-content reveal">
+                <div class="file-tree">
+                    <span class="dir">src/continual_learning/</span><br>
+                    &nbsp;&nbsp;<span class="dir">model/</span> <span class="desc">&mdash; DualMLP, Qwen injection, TF-IDF gate</span><br>
+                    &nbsp;&nbsp;<span class="dir">training/</span> <span class="desc">&mdash; TTT-E2E engine, calibration</span><br>
+                    &nbsp;&nbsp;<span class="dir">jitrl/</span> <span class="desc">&mdash; MVP + Full engines, comparison</span><br>
+                    &nbsp;&nbsp;<span class="dir">ace/</span> <span class="desc">&mdash; Generator, Reflector, Curator, Playbook</span><br>
+                    &nbsp;&nbsp;<span class="dir">doc2lora/</span> <span class="desc">&mdash; Perceiver, LoRA injector, chunker</span><br>
+                    &nbsp;&nbsp;<span class="dir">evaluation/</span> <span class="desc">&mdash; SQuAD benchmarks, forgetting metrics</span><br>
+                    &nbsp;&nbsp;<span class="dir">cli/</span> <span class="desc">&mdash; Interactive menu interface</span><br>
+                    &nbsp;&nbsp;<span class="dir">checkpointing/</span> <span class="desc">&mdash; Save/load learned state</span>
+                </div>
+                <div>
+                    <div class="strat-card" style="margin-bottom: var(--element-gap);">
+                        <div class="name" style="color:var(--accent)">Install</div>
+                        <div class="desc" style="font-family:var(--font-mono);">pip install continual-learning-slm</div>
+                    </div>
+                    <div class="strat-card" style="margin-bottom: var(--element-gap);">
+                        <div class="name" style="color:var(--accent)">Launch</div>
+                        <div class="desc" style="font-family:var(--font-mono);">continual-learning</div>
+                    </div>
+                    <div class="strat-card">
+                        <div class="name" style="color:var(--accent)">Test</div>
+                        <div class="desc" style="font-family:var(--font-mono);">uv run pytest tests/</div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="reveal" style="font-size:var(--small-size); color:var(--text-secondary); text-align:center; margin-top:var(--content-gap); font-family:var(--font-mono); letter-spacing:0.05em;">
+                github.com/jasperan/continual-learning &middot; 7 tutorials &middot; 206 tests &middot; MIT
+            </p>
+        </div>
+        <div class="slide-counter">10 / 10</div>
+    </section>
+
+    <!-- =========================================
+         SLIDE PRESENTATION CONTROLLER
+         ========================================= -->
+    <script>
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.totalSlides = this.slides.length;
+                this.setupIntersectionObserver();
+                this.setupKeyboardNav();
+                this.setupTouchNav();
+                this.setupProgressBar();
+                this.setupNavDots();
+            }
+
+            setupIntersectionObserver() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            const idx = Array.from(this.slides).indexOf(entry.target);
+                            if (idx >= 0) {
+                                this.currentSlide = idx;
+                                this.updateProgressBar();
+                                this.updateNavDots();
+                            }
+                        }
+                    });
+                }, { threshold: 0.4 });
+                this.slides.forEach(s => observer.observe(s));
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                        e.preventDefault();
+                        this.goToSlide(Math.min(this.currentSlide + 1, this.totalSlides - 1));
+                    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                        e.preventDefault();
+                        this.goToSlide(Math.max(this.currentSlide - 1, 0));
+                    } else if (e.key === 'Home') {
+                        e.preventDefault();
+                        this.goToSlide(0);
+                    } else if (e.key === 'End') {
+                        e.preventDefault();
+                        this.goToSlide(this.totalSlides - 1);
+                    }
+                });
+            }
+
+            setupTouchNav() {
+                let startY = 0;
+                document.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, { passive: true });
+                document.addEventListener('touchend', (e) => {
+                    const dy = startY - e.changedTouches[0].clientY;
+                    if (Math.abs(dy) > 50) {
+                        if (dy > 0) this.goToSlide(Math.min(this.currentSlide + 1, this.totalSlides - 1));
+                        else this.goToSlide(Math.max(this.currentSlide - 1, 0));
+                    }
+                }, { passive: true });
+            }
+
+            setupProgressBar() {
+                this.progressBar = document.getElementById('progressBar');
+                this.updateProgressBar();
+            }
+
+            updateProgressBar() {
+                if (this.progressBar) {
+                    const pct = ((this.currentSlide + 1) / this.totalSlides) * 100;
+                    this.progressBar.style.width = pct + '%';
+                }
+            }
+
+            setupNavDots() {
+                const nav = document.getElementById('navDots');
+                if (!nav) return;
+                this.slides.forEach((slide, i) => {
+                    const dot = document.createElement('button');
+                    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+                    dot.title = slide.dataset.title || `Slide ${i + 1}`;
+                    dot.addEventListener('click', () => this.goToSlide(i));
+                    nav.appendChild(dot);
+                });
+                this.dots = nav.querySelectorAll('.nav-dot');
+            }
+
+            updateNavDots() {
+                if (!this.dots) return;
+                this.dots.forEach((d, i) => d.classList.toggle('active', i === this.currentSlide));
+            }
+
+            goToSlide(idx) {
+                this.slides[idx].scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        new SlidePresentation();
+    </script>
+</body>
+</html>
