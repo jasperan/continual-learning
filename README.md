@@ -69,6 +69,29 @@ Based on Sakana AI research: [Doc-to-LoRA](https://arxiv.org/abs/2602.15902) and
 
 ## Installation
 
+<!-- one-command-install -->
+> **One-command install** — clone, configure, and run in a single step:
+>
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/jasperan/continual-learning/main/install.sh | bash
+> ```
+>
+> <details><summary>Advanced options</summary>
+>
+> Override install location:
+> ```bash
+> PROJECT_DIR=/opt/myapp curl -fsSL https://raw.githubusercontent.com/jasperan/continual-learning/main/install.sh | bash
+> ```
+>
+> Or install manually:
+> ```bash
+> git clone https://github.com/jasperan/continual-learning.git
+> cd continual-learning
+> # See below for setup instructions
+> ```
+> </details>
+
+
 From PyPI:
 
 ```bash
