@@ -1,0 +1,313 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0b0f;
+  --foreground: #e4e4e7;
+  --card: #12131a;
+  --card-foreground: #e4e4e7;
+  --border: rgba(255, 255, 255, 0.08);
+  --muted-foreground: #a1a1aa;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-muted-foreground: var(--muted-foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Chapter accent colors — 7 chapters for continual learning */
+  --color-ch1: #f97316; /* DualMLP Architecture */
+  --color-ch2: #22d3ee; /* TF-IDF Gating */
+  --color-ch3: #4ade80; /* TTT-E2E Engine */
+  --color-ch4: #a78bfa; /* JitRL MVP */
+  --color-ch5: #f472b6; /* JitRL Full */
+  --color-ch6: #facc15; /* ACE */
+  --color-ch7: #fb923c; /* Doc-to-LoRA */
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* ---- Widget Container ---- */
+.widget-container {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  overflow: hidden;
+}
+
+.widget-container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 12px 12px 0 0;
+  opacity: 0.7;
+}
+
+.widget-container.ch1::before { background: linear-gradient(90deg, #f97316, #fb923c, #fdba74); }
+.widget-container.ch2::before { background: linear-gradient(90deg, #22d3ee, #67e8f9, #a5f3fc); }
+.widget-container.ch3::before { background: linear-gradient(90deg, #4ade80, #86efac, #bbf7d0); }
+.widget-container.ch4::before { background: linear-gradient(90deg, #a78bfa, #c4b5fd, #ddd6fe); }
+.widget-container.ch5::before { background: linear-gradient(90deg, #f472b6, #f9a8d4, #fbcfe8); }
+.widget-container.ch6::before { background: linear-gradient(90deg, #facc15, #fde047, #fef08a); }
+.widget-container.ch7::before { background: linear-gradient(90deg, #fb923c, #fdba74, #fed7aa); }
+
+/* ---- Widget Label ---- */
+.widget-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted-foreground);
+  margin-bottom: 1rem;
+}
+
+/* ---- Chapter accent text ---- */
+.text-ch1 { color: #f97316; font-weight: 600; }
+.text-ch2 { color: #22d3ee; font-weight: 600; }
+.text-ch3 { color: #4ade80; font-weight: 600; }
+.text-ch4 { color: #a78bfa; font-weight: 600; }
+.text-ch5 { color: #f472b6; font-weight: 600; }
+.text-ch6 { color: #facc15; font-weight: 600; }
+.text-ch7 { color: #fb923c; font-weight: 600; }
+
+/* ---- Buttons ---- */
+.btn-mono {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-mono:hover { background: rgba(255,255,255,0.05); color: var(--foreground); }
+.btn-mono.active { background: rgba(255,255,255,0.1); color: var(--foreground); border-color: rgba(255,255,255,0.2); }
+
+/* ---- Slider ---- */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255,255,255,0.08);
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e4e4e7;
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+/* ---- Code Block ---- */
+.code-block {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8rem;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+/* ---- Scroll Reveal ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---- Pulse Highlight ---- */
+@keyframes pulse-highlight {
+  0% { background: rgba(34,211,238,0.3); }
+  100% { background: transparent; }
+}
+.pulse-highlight { animation: pulse-highlight 0.8s ease-out; }
+
+/* ---- Slide In ---- */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in { animation: slideInRight 0.4s ease-out both; }
+
+/* ---- Fade In ---- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in { animation: fadeIn 0.5s ease-out both; }
+
+/* ---- Matrix Cell ---- */
+.matrix-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 2rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+/* ---- Nav ---- */
+.nav-link {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.nav-link:hover { background: rgba(255,255,255,0.05); color: var(--foreground); }
+.nav-link.active { background: rgba(255,255,255,0.08); color: var(--foreground); }
+
+/* ---- Hero Glow ---- */
+.hero-glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* ---- Section Divider ---- */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 4rem 0;
+}
+
+/* ---- Prose Defaults ---- */
+.prose-dark h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+.prose-dark h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--muted-foreground);
+}
+.prose-dark p {
+  color: #b4b4bc;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+.prose-dark strong { color: var(--foreground); }
+.prose-dark a {
+  color: #22d3ee;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---- Tooltip ---- */
+.tooltip {
+  position: absolute;
+  background: #1e1e26;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--foreground);
+  pointer-events: none;
+  z-index: 50;
+  white-space: nowrap;
+}
+
+/* ---- Token styles ---- */
+.token-box {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+}
+
+/* ---- Pipeline stages ---- */
+.pipeline-stage {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pipeline-stage:hover { background: rgba(255,255,255,0.03); }
+.pipeline-stage.active { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); }
+
+/* ---- Neuron Grid ---- */
+.neuron {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  transition: all 0.3s ease-out;
+}
+
+/* ---- Flow Arrow ---- */
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--muted-foreground);
+  opacity: 0.5;
+}
+
+/* ---- Strategy Card ---- */
+.strategy-card {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.15);
+  font-size: 0.75rem;
+  transition: all 0.3s;
+}
+.strategy-card.new { animation: slideInRight 0.4s ease-out both; border-color: rgba(250,204,21,0.3); }
+.strategy-card.removed { opacity: 0.3; text-decoration: line-through; }
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
