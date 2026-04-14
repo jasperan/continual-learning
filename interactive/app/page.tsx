@@ -42,12 +42,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
+      {/* ---- Skip to content (a11y) ---- */}
+      <a href="#main-content" className="skip-to-content">
+        Skip to content
+      </a>
+
       {/* ---- Nav ---- */}
-      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 py-2 flex items-center gap-1 overflow-x-auto">
-          <a href="#top" className="nav-link font-bold text-foreground mr-2">
-            CL<span className="text-muted-foreground font-normal">.play</span>
+      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border" role="navigation" aria-label="Chapter navigation">
+        <div className="max-w-6xl mx-auto px-5 py-2.5 flex items-center gap-1 overflow-x-auto">
+          <a href="#top" className="nav-link font-bold text-foreground mr-3 tracking-tight">
+            CL<span className="text-muted-foreground font-normal opacity-60">.play</span>
           </a>
+          <div className="w-px h-4 bg-border mx-1 flex-shrink-0" />
           {chapters.map((ch) => (
             <a key={ch.id} href={`#${ch.id}`} className="nav-link">
               <span className={ch.color}>{ch.num}</span>
@@ -58,23 +64,23 @@ export default function Home() {
       </nav>
 
       {/* ---- Hero ---- */}
-      <header id="top" className="relative overflow-hidden py-24 md:py-32">
-        <div className="hero-glow bg-orange-500 top-[-200px] left-[10%]" />
-        <div className="hero-glow bg-cyan-500 top-[-100px] right-[15%]" />
-        <div className="hero-glow bg-green-500 bottom-[-200px] left-[40%]" />
-        <div className="max-w-5xl mx-auto px-4 relative z-10">
-          <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase mb-4">
+      <header id="top" className="relative overflow-hidden py-28 md:py-36">
+        <div className="hero-glow bg-orange-500 top-[-200px] left-[8%]" />
+        <div className="hero-glow bg-cyan-500 top-[-80px] right-[12%]" />
+        <div className="hero-glow bg-green-500 bottom-[-200px] left-[35%]" />
+        <div className="max-w-6xl mx-auto px-5 relative z-10">
+          <p className="font-mono text-[0.7rem] text-muted-foreground tracking-[0.2em] uppercase mb-5 opacity-70">
             Interactive Explorer
           </p>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-6">
+          <h1 className="text-4xl md:text-[3.5rem] lg:text-[4rem] font-bold tracking-[-0.035em] leading-[1.1] mb-7" style={{ textWrap: "balance" as never }}>
             Teach a{" "}
             <span className="text-ch1">1.5B Model</span>{" "}
             New Knowledge<br className="hidden md:block" /> Without{" "}
             <span className="text-ch3">Forgetting</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-[58ch] leading-relaxed">
             Seven chapters. Thirteen interactive widgets. Five strategies for continual learning
-            in small language models &mdash; from{" "}
+            in small language models: from{" "}
             <span className="text-ch1">DualMLP injection</span> and{" "}
             <span className="text-ch2">TF-IDF gating</span> through{" "}
             <span className="text-ch3">test-time training</span>,{" "}
@@ -83,47 +89,47 @@ export default function Home() {
             <span className="text-ch6">agentic context</span>, and{" "}
             <span className="text-ch7">hypernetwork LoRA</span>.
           </p>
-          <p className="text-sm text-muted-foreground mt-4 font-mono">
+          <p className="text-sm text-muted-foreground/70 mt-5 font-mono tracking-wide">
             Every concept below is interactive. Click neurons, drag sliders, step through training loops.
           </p>
         </div>
       </header>
 
       {/* ---- Table of Contents ---- */}
-      <div className="max-w-5xl mx-auto px-4 mb-16">
-        <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="text-sm font-mono text-muted-foreground uppercase tracking-wider mb-4">
+      <div className="max-w-6xl mx-auto px-5 mb-20">
+        <div className="bg-card border border-border rounded-2xl p-7" style={{ boxShadow: "0 4px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.03)" }}>
+          <h2 className="text-[0.7rem] font-mono text-muted-foreground/70 uppercase tracking-[0.15em] mb-5">
             Chapters
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { id: "ch1", num: "01", title: "DualMLP Architecture", desc: "Frozen + trainable MLPs, SwiGLU, alpha blending, layer injection", color: "text-ch1", border: "border-orange-500/20 hover:border-orange-500/40" },
-              { id: "ch2", num: "02", title: "TF-IDF Gradient Gating", desc: "Neuron-level gradient masking, calibration, sparse memory protection", color: "text-ch2", border: "border-cyan-500/20 hover:border-cyan-500/40" },
-              { id: "ch3", num: "03", title: "Test-Time Training (TTT-E2E)", desc: "Mini-batch gradient descent, alpha decay, forgetting metrics", color: "text-ch3", border: "border-green-500/20 hover:border-green-500/40" },
-              { id: "ch4", num: "04", title: "JitRL MVP: Retrieval + Bias", desc: "TF-IDF retrieval, document chunking, logit biasing", color: "text-ch4", border: "border-purple-500/20 hover:border-purple-500/40" },
-              { id: "ch5", num: "05", title: "JitRL Full: Reward Modulation", desc: "Hidden-state embeddings, knowledge store, reward-guided logits", color: "text-ch5", border: "border-pink-500/20 hover:border-pink-500/40" },
-              { id: "ch6", num: "06", title: "ACE: Agentic Context Engineering", desc: "Generate-Reflect-Curate loops, playbook evolution, meta-learning", color: "text-ch6", border: "border-yellow-500/20 hover:border-yellow-500/40" },
-              { id: "ch7", num: "07", title: "Doc-to-LoRA: Hypernetwork", desc: "Perceiver cross-attention, single-pass LoRA, rank concatenation", color: "text-ch7", border: "border-orange-500/20 hover:border-orange-500/40" },
+              { id: "ch1", num: "01", title: "DualMLP Architecture", desc: "Frozen + trainable MLPs, SwiGLU, alpha blending", color: "text-ch1", border: "border-orange-500/15 hover:border-orange-500/35" },
+              { id: "ch2", num: "02", title: "TF-IDF Gradient Gating", desc: "Neuron-level gradient masking, calibration", color: "text-ch2", border: "border-cyan-500/15 hover:border-cyan-500/35" },
+              { id: "ch3", num: "03", title: "TTT-E2E Engine", desc: "Mini-batch gradient descent, alpha decay", color: "text-ch3", border: "border-green-500/15 hover:border-green-500/35" },
+              { id: "ch4", num: "04", title: "JitRL MVP", desc: "TF-IDF retrieval, logit biasing", color: "text-ch4", border: "border-purple-500/15 hover:border-purple-500/35" },
+              { id: "ch5", num: "05", title: "JitRL Full", desc: "Knowledge store, reward modulation", color: "text-ch5", border: "border-pink-500/15 hover:border-pink-500/35" },
+              { id: "ch6", num: "06", title: "ACE", desc: "Generate-Reflect-Curate loops", color: "text-ch6", border: "border-yellow-500/15 hover:border-yellow-500/35" },
+              { id: "ch7", num: "07", title: "Doc-to-LoRA", desc: "Perceiver hypernetwork, rank concat", color: "text-ch7", border: "border-orange-500/15 hover:border-orange-500/35" },
             ].map((ch) => (
               <a
                 key={ch.id}
                 href={`#${ch.id}`}
-                className={`block p-4 rounded-lg border ${ch.border} bg-card transition-all hover:bg-white/[0.02]`}
+                className={`group block p-4 rounded-xl border ${ch.border} bg-card transition-all duration-200 hover:bg-white/[0.02] active:scale-[0.98]`}
               >
-                <span className={`font-mono text-xs ${ch.color}`}>{ch.num}</span>
-                <h3 className="font-semibold text-sm mt-1">{ch.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{ch.desc}</p>
+                <span className={`font-mono text-[0.65rem] ${ch.color} opacity-70 group-hover:opacity-100 transition-opacity`}>{ch.num}</span>
+                <h3 className="font-semibold text-sm mt-1 tracking-tight">{ch.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{ch.desc}</p>
               </a>
             ))}
           </div>
         </div>
       </div>
 
-      <main className="max-w-5xl mx-auto px-4 prose-dark">
+      <main id="main-content" className="max-w-6xl mx-auto px-5 prose-dark">
         {/* ================================================================
             THE PROBLEM: CATASTROPHIC FORGETTING
             ================================================================ */}
-        <section className="reveal mb-16">
+        <section className="reveal mb-20">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">The Problem: Catastrophic Forgetting</h2>
           <p>
             When a neural network learns new information through gradient updates, it tends to overwrite
@@ -146,7 +152,7 @@ export default function Home() {
         {/* ================================================================
             CHAPTER 1: DUALMPLP ARCHITECTURE
             ================================================================ */}
-        <section id="ch1" className="reveal mb-16 scroll-mt-16">
+        <section id="ch1" className="reveal mb-20 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
             <span className="font-mono text-3xl font-bold text-ch1">01</span>
             <div>
@@ -199,7 +205,7 @@ export default function Home() {
         {/* ================================================================
             CHAPTER 2: TF-IDF GRADIENT GATING
             ================================================================ */}
-        <section id="ch2" className="reveal mb-16 scroll-mt-16">
+        <section id="ch2" className="reveal mb-20 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
             <span className="font-mono text-3xl font-bold text-ch2">02</span>
             <div>
@@ -240,7 +246,7 @@ export default function Home() {
         {/* ================================================================
             CHAPTER 3: TTT-E2E ENGINE
             ================================================================ */}
-        <section id="ch3" className="reveal mb-16 scroll-mt-16">
+        <section id="ch3" className="reveal mb-20 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
             <span className="font-mono text-3xl font-bold text-ch3">03</span>
             <div>
@@ -291,7 +297,7 @@ export default function Home() {
         {/* ================================================================
             CHAPTER 4: JITRL MVP
             ================================================================ */}
-        <section id="ch4" className="reveal mb-16 scroll-mt-16">
+        <section id="ch4" className="reveal mb-20 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
             <span className="font-mono text-3xl font-bold text-ch4">04</span>
             <div>
@@ -343,7 +349,7 @@ export default function Home() {
         {/* ================================================================
             CHAPTER 5: JITRL FULL
             ================================================================ */}
-        <section id="ch5" className="reveal mb-16 scroll-mt-16">
+        <section id="ch5" className="reveal mb-20 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
             <span className="font-mono text-3xl font-bold text-ch5">05</span>
             <div>
@@ -397,7 +403,7 @@ export default function Home() {
         {/* ================================================================
             CHAPTER 6: ACE
             ================================================================ */}
-        <section id="ch6" className="reveal mb-16 scroll-mt-16">
+        <section id="ch6" className="reveal mb-20 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
             <span className="font-mono text-3xl font-bold text-ch6">06</span>
             <div>
@@ -450,7 +456,7 @@ export default function Home() {
         {/* ================================================================
             CHAPTER 7: DOC-TO-LORA
             ================================================================ */}
-        <section id="ch7" className="reveal mb-16 scroll-mt-16">
+        <section id="ch7" className="reveal mb-20 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
             <span className="font-mono text-3xl font-bold text-ch7">07</span>
             <div>
@@ -491,7 +497,7 @@ export default function Home() {
         {/* ================================================================
             COMPARISON
             ================================================================ */}
-        <section className="reveal mb-16">
+        <section className="reveal mb-20">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Choosing a Strategy</h2>
           <p>
             Each strategy makes different trade-offs. The right choice depends on your constraints:
@@ -513,29 +519,29 @@ export default function Home() {
         <div className="section-divider" />
 
         {/* ---- Conclusion ---- */}
-        <section className="reveal mb-16">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-6">The Full Picture</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        <section className="reveal mb-20">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 tracking-tight">The Full Picture</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
             {[
-              { num: "01", label: "Inject", desc: "DualMLP into layers 21-27", color: "text-ch1", bg: "bg-orange-500/5 border-orange-500/20" },
-              { num: "02", label: "Gate", desc: "TF-IDF neuron protection", color: "text-ch2", bg: "bg-cyan-500/5 border-cyan-500/20" },
-              { num: "03", label: "Train", desc: "TTT-E2E gradient descent", color: "text-ch3", bg: "bg-green-500/5 border-green-500/20" },
-              { num: "04", label: "Retrieve", desc: "TF-IDF chunks + logit bias", color: "text-ch4", bg: "bg-purple-500/5 border-purple-500/20" },
-              { num: "05", label: "Modulate", desc: "Reward-guided logits", color: "text-ch5", bg: "bg-pink-500/5 border-pink-500/20" },
-              { num: "06", label: "Evolve", desc: "Agentic playbook loops", color: "text-ch6", bg: "bg-yellow-500/5 border-yellow-500/20" },
-              { num: "07", label: "Generate", desc: "Hypernetwork LoRA", color: "text-ch7", bg: "bg-orange-500/5 border-orange-500/20" },
-              { num: "\u2713", label: "Measure", desc: "Forgetting ratio < 15%", color: "text-ch3", bg: "bg-green-500/5 border-green-500/20" },
+              { num: "01", label: "Inject", desc: "DualMLP into layers 21-27", color: "text-ch1", bg: "bg-orange-500/5 border-orange-500/15 hover:border-orange-500/30" },
+              { num: "02", label: "Gate", desc: "TF-IDF neuron protection", color: "text-ch2", bg: "bg-cyan-500/5 border-cyan-500/15 hover:border-cyan-500/30" },
+              { num: "03", label: "Train", desc: "TTT-E2E gradient descent", color: "text-ch3", bg: "bg-green-500/5 border-green-500/15 hover:border-green-500/30" },
+              { num: "04", label: "Retrieve", desc: "TF-IDF chunks + logit bias", color: "text-ch4", bg: "bg-purple-500/5 border-purple-500/15 hover:border-purple-500/30" },
+              { num: "05", label: "Modulate", desc: "Reward-guided logits", color: "text-ch5", bg: "bg-pink-500/5 border-pink-500/15 hover:border-pink-500/30" },
+              { num: "06", label: "Evolve", desc: "Agentic playbook loops", color: "text-ch6", bg: "bg-yellow-500/5 border-yellow-500/15 hover:border-yellow-500/30" },
+              { num: "07", label: "Generate", desc: "Hypernetwork LoRA", color: "text-ch7", bg: "bg-orange-500/5 border-orange-500/15 hover:border-orange-500/30" },
+              { num: "\u2713", label: "Measure", desc: "Forgetting ratio < 15%", color: "text-ch3", bg: "bg-green-500/5 border-green-500/15 hover:border-green-500/30" },
             ].map((step, i) => (
-              <div key={i} className={`p-4 rounded-lg border ${step.bg}`}>
+              <div key={i} className={`p-4 rounded-xl border ${step.bg} transition-all duration-200`}>
                 <span className={`font-mono text-2xl font-bold ${step.color}`}>{step.num}</span>
-                <h3 className="font-semibold text-sm mt-1">{step.label}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{step.desc}</p>
+                <h3 className="font-semibold text-sm mt-1.5 tracking-tight">{step.label}</h3>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
-          <p className="text-center text-muted-foreground max-w-xl mx-auto">
+          <p className="text-center text-muted-foreground max-w-[52ch] mx-auto leading-relaxed" style={{ textWrap: "balance" as never }}>
             Five strategies, one goal: learn without forgetting. Each approach attacks the problem
-            from a different angle &mdash; weight modification, retrieval augmentation, self-critique,
+            from a different angle: weight modification, retrieval augmentation, self-critique,
             or hypernetwork generation.{" "}
             <strong className="text-foreground">
               The architecture prevents forgetting. The strategies enable learning.
@@ -545,13 +551,17 @@ export default function Home() {
       </main>
 
       {/* ---- Footer ---- */}
-      <footer className="border-t border-border py-8 mt-16">
-        <div className="max-w-5xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-muted-foreground font-mono">
-            Continual Learning for SLMs &mdash; Interactive Explorer
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Built with Next.js, React, and Tailwind CSS
+      <footer className="border-t border-border py-10 mt-20">
+        <div className="max-w-6xl mx-auto px-5 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="font-bold text-sm tracking-tight text-foreground/80">CL<span className="text-muted-foreground/50 font-normal">.play</span></span>
+            <span className="w-px h-3 bg-border" />
+            <p className="text-xs text-muted-foreground/60 font-mono">
+              Continual Learning for SLMs
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground/50 font-mono">
+            Next.js + React + Tailwind CSS
           </p>
         </div>
       </footer>
