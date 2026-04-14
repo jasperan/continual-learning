@@ -5,27 +5,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Run
 
 ```bash
-pip install -e ".[dev]"    # Install package + dev deps (editable)
+# Option 1: venv (matches install.sh)
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+
+# Option 2: conda (per workspace convention)
+conda create -n continual-learning python=3.12
+conda activate continual-learning
+pip install -e ".[dev]"
+
 continual-learning          # Launch interactive CLI (entry point)
 ```
 
 ## Testing
 
 ```bash
-python -m pytest tests/                        # All 101 tests (~10s)
+python -m pytest tests/                        # All tests
 python -m pytest tests/test_model/             # Just model tests
 python -m pytest tests/test_jitrl/             # Just JitRL tests
+python -m pytest tests/test_ace/               # Just ACE tests
 python -m pytest tests/test_config.py -k "test_load"  # Single test by name
 ```
 
 Pytest is configured in `pyproject.toml`: testpaths=`tests/`, pythonpath=`src/`.
 
-## GPU Validation Scripts
+## Linting
 
 ```bash
-python scripts/validate_gpu.py    # Milestones 1-3, 5 (requires A10/24GB)
-python scripts/validate_jitrl.py  # JitRL MVP vs Full comparison
-python scripts/validate_doc2lora.py  # Doc-to-LoRA pipeline (Gemma-2-2b-it)
+ruff check src/ tests/    # Lint (E, F, I, N, W rules; line-length 100)
+ruff format src/ tests/   # Auto-format (double quotes)
+ty check src/             # Type checking (ty, targets Python 3.11)
+```
+
+## GPU Validation Scripts
+
+These live in `tests/` (not `scripts/`):
+
+```bash
+python tests/validate_gpu.py        # Milestones 1-3, 5 (requires A10/24GB)
+python tests/validate_jitrl.py      # JitRL MVP vs Full comparison
+python tests/validate_doc2lora.py   # Doc-to-LoRA pipeline (Gemma-2-2b-it)
+python tests/train_hypernetwork.py  # Hypernetwork training run
 ```
 
 ## Architecture
@@ -54,6 +74,9 @@ injects them into the base model's MLP layers. Two modes: `doc` (document intern
 and `text` (task specialization). Uses simulated hypernetwork for tests; real Sakana AI
 checkpoint for GPU demos with Gemma-2-2b-it.
 
+### ACE — Agentic Context Engineering (`ace/`)
+Ollama-backed agentic pipeline that runs multi-loop context generation. Components: `engine.py` (main loop, `num_loops` iterations), `generator.py` (prompt → text), `curator.py` (filters/deduplicates outputs), `adapter.py` (format conversion), `reflector.py` (self-critique), `playbook.py` (strategy store, persisted to `playbooks/`), `ollama_client.py` (HTTP client for `localhost:11434`). Configured via the `ace:` block in `configs/default.yaml` (model: `qwen2.5:7b`, 3 loops, up to 50 strategies).
+
 ### CLI (`cli/main.py`)
 Interactive menu (Questionary + Rich) that lazy-loads the model on first use. All state is global module-level variables. Menu handlers map to `MENU_HANDLERS` dict.
 
@@ -65,6 +88,7 @@ Interactive menu (Questionary + Rich) that lazy-loads the model on first use. Al
 
 ```
 src/continual_learning/
+├── ace/             # Agentic Context Engineering (Ollama-backed pipeline)
 ├── model/           # DualMLP, modified Qwen, TF-IDF gate
 ├── training/        # TTT engine, calibration
 ├── evaluation/      # Benchmarks, forgetting metrics
@@ -79,5 +103,5 @@ src/continual_learning/
 ## Git Conventions
 
 - No AI attribution in commit messages
-- Never push to GitHub — local commits only
+- Commit and push after completing changes (standard workspace policy)
 - Design docs live in `docs/plans/` (gitignored)
