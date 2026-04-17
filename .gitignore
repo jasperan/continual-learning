@@ -36,3 +36,13 @@ venv/
 # Auto-added by install-pre-commit-hooks.sh
 dogfood-output/
 .playwright-mcp/
+
+# Agent tooling (local only)
+.agents/
+.claude/
+.crush/
+.openhands/
+.serena/
+
+# Generated content (local only)
+content/

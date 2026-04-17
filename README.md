@@ -14,7 +14,7 @@ Interactive visual guides are available in the [`assets/`](assets/) directory:
 
 | Resource | Description |
 |----------|-------------|
-| [Architecture Overview](assets/architecture-overview.html) | Interactive deep-dive into the DualMLP architecture, all five learning strategies with data flow pipelines, strategy comparison table, and full project map |
+| [Architecture Overview](assets/architecture-overview.html) | Interactive walkthrough of the DualMLP architecture, all five learning strategies with data flow pipelines, strategy comparison table, and full project map |
 | [Strategy Slides](assets/strategy-slides.html) | Magazine-quality slide deck presenting the problem of catastrophic forgetting, the DualMLP solution, and each of the five strategies with pipeline visualizations |
 
 Open either file in a browser for the full interactive experience. The architecture overview includes a navigable sidebar TOC, and the slide deck supports keyboard navigation (arrow keys, space), touch/swipe, and nav dots.
@@ -45,12 +45,12 @@ A more sophisticated retrieval approach. Documents are encoded into hidden-state
 
 ### Strategy 4: ACE (Agentic Context Engineering)
 
-A zero-weight-update approach inspired by the [Stanford + SambaNova ACE paper](https://arxiv.org). Instead of modifying model weights or retrieving passages, ACE evolves a **playbook** — a structured set of strategies — through iterative self-improvement loops powered by a local LLM via Ollama.
+A zero-weight-update approach inspired by the [Stanford + SambaNova ACE paper](https://arxiv.org). Instead of modifying model weights or retrieving passages, ACE evolves a **playbook** (a structured set of strategies) through iterative self-improvement loops powered by a local LLM via Ollama.
 
 Each learning cycle runs three roles:
 - **Generator**: Answers questions using the document and current playbook strategies
 - **Reflector**: Critiques the answer (what went right, what went wrong, suggested improvements)
-- **Curator**: Patch-updates the playbook with minimal, targeted changes (never a full rewrite — preventing "context collapse")
+- **Curator**: Patch-updates the playbook with minimal, targeted changes (never a full rewrite, preventing "context collapse")
 
 The playbook grows smarter with each loop: failures become strategies, successes become rules. Playbooks persist as JSON files and can be saved/loaded across sessions.
 
@@ -58,7 +58,7 @@ The playbook grows smarter with each loop: failures become strategies, successes
 
 ### Strategy 5: Doc-to-LoRA (Hypernetwork-Generated Adapters)
 
-A single-forward-pass approach to knowledge internalization. A **Perceiver-based hypernetwork** (8 cross-attention blocks) reads document activations from a frozen base model and directly outputs rank-8 LoRA weight matrices, which are injected into the model via peft. No gradient descent, no iterative fine-tuning — knowledge is written into LoRA adapters in one shot.
+A single-forward-pass approach to knowledge internalization. A **Perceiver-based hypernetwork** (8 cross-attention blocks) reads document activations from a frozen base model and directly outputs rank-8 LoRA weight matrices, which are injected into the model via peft. No gradient descent, no iterative fine-tuning. Knowledge is written into LoRA adapters in one shot.
 
 The pipeline: Document → Chunker (1024-token chunks) → Frozen base model (extract activations) → Perceiver Hypernetwork → Rank-8 LoRA matrices → peft injection → Generate. Multiple chunks compose via rank concatenation.
 
@@ -73,15 +73,15 @@ Based on Sakana AI research: [Doc-to-LoRA](https://arxiv.org/abs/2602.15902) and
 ## Requirements
 
 - Python 3.11+
-- NVIDIA GPU with 24GB+ VRAM (tested on A10) — for TTT-E2E and JitRL strategies
+- NVIDIA GPU with 24GB+ VRAM (tested on A10), for TTT-E2E and JitRL strategies
 - CUDA toolkit
-- [Ollama](https://ollama.com/) — required only for ACE strategy (install and `ollama pull qwen3.5:9b`)
-- [HuggingFace account](https://huggingface.co/) — required only for Doc-to-LoRA strategy (Gemma-2-2b-it model access + `huggingface-cli login`)
+- [Ollama](https://ollama.com/), required only for ACE strategy (install and `ollama pull qwen3.5:9b`)
+- [HuggingFace account](https://huggingface.co/), required only for Doc-to-LoRA strategy (Gemma-2-2b-it model access + `huggingface-cli login`)
 
 ## Installation
 
 <!-- one-command-install -->
-> **One-command install** — clone, configure, and run in a single step:
+> **One-command install**: clone, configure, and run in a single step:
 >
 > ```bash
 > curl -fsSL https://raw.githubusercontent.com/jasperan/continual-learning/main/install.sh | bash
@@ -166,13 +166,13 @@ Interactive Jupyter notebooks walk through each strategy step-by-step with conce
 
 | Tutorial | Strategy | What You'll Learn |
 |----------|----------|-------------------|
-| [00 — Introduction](tutorials/00_introduction.ipynb) | Overview | Catastrophic forgetting, live demo, strategy comparison |
-| [01 — TTT-E2E](tutorials/01_ttt_e2e.ipynb) | Test-Time Training | DualMLP architecture, TF-IDF gating, alpha decay, checkpointing |
-| [02 — JitRL MVP](tutorials/02_jitrl_mvp.ipynb) | Retrieval-Augmented | TF-IDF retrieval, logit biasing, parameter tuning |
-| [03 — JitRL Full](tutorials/03_jitrl_full.ipynb) | Reward-Guided | Hidden-state embeddings, reward signals, MVP vs Full comparison |
-| [04 — ACE](tutorials/04_ace.ipynb) | Agentic Context | Generate-Reflect-Curate loops, playbook evolution |
-| [05 — Doc-to-LoRA](tutorials/05_doc2lora.ipynb) | Hypernetwork Adapters | LoRA math, hypernetworks, document chunking, task specialization |
-| [06 — Benchmark](tutorials/06_benchmark.ipynb) | Comparison | Side-by-side evaluation, decision guide, scaling analysis |
+| [00. Introduction](tutorials/00_introduction.ipynb) | Overview | Catastrophic forgetting, live demo, strategy comparison |
+| [01. TTT-E2E](tutorials/01_ttt_e2e.ipynb) | Test-Time Training | DualMLP architecture, TF-IDF gating, alpha decay, checkpointing |
+| [02. JitRL MVP](tutorials/02_jitrl_mvp.ipynb) | Retrieval-Augmented | TF-IDF retrieval, logit biasing, parameter tuning |
+| [03. JitRL Full](tutorials/03_jitrl_full.ipynb) | Reward-Guided | Hidden-state embeddings, reward signals, MVP vs Full comparison |
+| [04. ACE](tutorials/04_ace.ipynb) | Agentic Context | Generate-Reflect-Curate loops, playbook evolution |
+| [05. Doc-to-LoRA](tutorials/05_doc2lora.ipynb) | Hypernetwork Adapters | LoRA math, hypernetworks, document chunking, task specialization |
+| [06. Benchmark](tutorials/06_benchmark.ipynb) | Comparison | Side-by-side evaluation, decision guide, scaling analysis |
 
 ```bash
 cd tutorials
@@ -234,21 +234,21 @@ Feed a document to the hypernetwork to generate LoRA adapters that encode its co
 3. The engine chunks the document (1024 tokens/chunk), runs each chunk through the hypernetwork, and injects rank-8 LoRA adapters into the model
 4. Select **Doc-to-LoRA: Ask Question** and query the model about the document
 
-Multiple documents can be learned — each one adds LoRA adapters via rank concatenation (effective rank = 8 × number of chunks).
+Multiple documents can be learned. Each one adds LoRA adapters via rank concatenation (effective rank = 8 × number of chunks).
 
 #### Text Mode (Task Description → LoRA)
 
 Generate task-specialized LoRA adapters from a natural language instruction:
 
 1. Select **Doc-to-LoRA: Switch Mode** to toggle from `doc` to `text`
-2. Select **Doc-to-LoRA: Learn Document** and type a task description (e.g., "answer questions about quantum physics") instead of a file path — in text mode the full description is processed as a single chunk
+2. Select **Doc-to-LoRA: Learn Document** and type a task description (e.g., "answer questions about quantum physics") instead of a file path. In text mode the full description is processed as a single chunk
 3. Select **Doc-to-LoRA: Ask Question** to query using the task-specialized adapters
 
 Switch back to `doc` mode at any time with **Doc-to-LoRA: Switch Mode**.
 
 #### Simulated Mode (No GPU / No Downloads)
 
-To experiment without downloading models, set `simulated: true` in `configs/default.yaml` under `doc2lora`. This uses a deterministic hash-seeded hypernetwork that produces consistent but non-meaningful LoRA weights — useful for testing the pipeline end-to-end.
+To experiment without downloading models, set `simulated: true` in `configs/default.yaml` under `doc2lora`. This uses a deterministic hash-seeded hypernetwork that produces consistent but non-meaningful LoRA weights, useful for testing the pipeline end-to-end.
 
 #### Python API
 
@@ -287,7 +287,7 @@ print(engine.generate("What is quantum entanglement?"))
 
 | CLI Option | What It Does |
 |---|---|
-| **Compare All Engines** | A/B benchmarks across JitRL MVP, JitRL Full, and ACE on the same document and QA pairs. Provide a document path, then enter question/answer pairs. The harness feeds the same data to each engine and reports accuracy, learn time, eval time, and tokens learned in a comparison table. Doc-to-LoRA can also be compared, though it uses a different base model (Gemma-2-2b-it). |
+| **Compare All Engines** | A/B benchmarks across JitRL MVP, JitRL Full, and ACE on the same document and QA pairs. Provide a document path, then enter question/answer pairs. The runner feeds the same data to each engine and reports accuracy, learn time, eval time, and tokens learned in a comparison table. Doc-to-LoRA can also be compared, though it uses a different base model (Gemma-2-2b-it). |
 
 ## Evaluation and Benchmarks
 
@@ -359,7 +359,7 @@ uv run pytest tests/
 # By component
 uv run pytest tests/test_model/          # DualMLP, modified Qwen, TF-IDF gate
 uv run pytest tests/test_training/       # TTT-E2E engine
-uv run pytest tests/test_jitrl/          # JitRL MVP, Full, comparison harness
+uv run pytest tests/test_jitrl/          # JitRL MVP, Full, comparison runner
 uv run pytest tests/test_ace/            # ACE engine, roles, playbook, adapter
 uv run pytest tests/test_doc2lora/       # Doc-to-LoRA engine, hypernetwork, chunker, trainer
 uv run pytest tests/test_evaluation/     # Benchmarks, forgetting metrics
@@ -386,7 +386,7 @@ python scripts/validate_gpu.py
 
 # Compares JitRL MVP vs Full on identical Oracle AI Vector Search content:
 #   - Tests each engine individually (learn time, generate time, response quality)
-#   - Runs comparison harness with 3 QA items, reports accuracy/timing side by side
+#   - Runs comparison runner with 3 QA items, reports accuracy/timing side by side
 python scripts/validate_jitrl.py
 
 # Validates Doc-to-LoRA pipeline end-to-end:
@@ -428,7 +428,7 @@ src/continual_learning/
 │   │   ├── engine.py        # JitRL Full: hidden-state knowledge store + reward modulation
 │   │   ├── knowledge_store.py # Stores and retrieves document embeddings by cosine similarity
 │   │   └── reward.py        # Computes reward vectors and modulates logits
-│   └── comparison.py        # A/B harness: runs identical benchmarks across engines
+│   └── comparison.py        # A/B runner: runs identical benchmarks across engines
 ├── ace/
 │   ├── engine.py            # ACE orchestrator: Generate-Reflect-Curate loop
 │   ├── generator.py         # Generator role: answers questions using playbook + context
@@ -436,7 +436,7 @@ src/continual_learning/
 │   ├── curator.py           # Curator role: patch-updates playbook (never full rewrite)
 │   ├── playbook.py          # Evolving strategy playbook with JSON persistence
 │   ├── ollama_client.py     # Thin sync HTTP client for Ollama /api/generate
-│   └── adapter.py           # Wraps ACEEngine as BaseJitRLEngine for comparison harness
+│   └── adapter.py           # Wraps ACEEngine as BaseJitRLEngine for comparison runner
 ├── doc2lora/
 │   ├── engine.py            # Doc2LoRA engine (learn/generate/clear)
 │   ├── hypernetwork.py      # Perceiver hypernetwork + simulated fallback
