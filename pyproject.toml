@@ -52,3 +52,13 @@ continual-learning = "continual_learning.cli.main:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv]
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
