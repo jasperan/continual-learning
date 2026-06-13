@@ -2,6 +2,7 @@ import torch
 from typing import Optional
 
 from continual_learning.evaluation.forgetting_metrics import compute_forgetting_ratio
+from continual_learning.text_utils import answer_matches
 
 
 def evaluate_qa_accuracy(
@@ -44,7 +45,7 @@ def evaluate_qa_accuracy(
 
         response = tokenizer.decode(outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
 
-        if item["answer"].lower() in response.lower():
+        if answer_matches(item["answer"], response):
             correct += 1
         total += 1
 

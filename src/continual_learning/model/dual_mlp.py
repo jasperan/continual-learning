@@ -1,4 +1,3 @@
-import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -25,13 +24,15 @@ class SwiGLUMLP(nn.Module):
 
 
 class DualMLP(nn.Module):
-    """Dual-MLP module: frozen (original) + trainable (zero-init) with TF-IDF gating.
+    """Dual-MLP module: frozen (original) + trainable copy with TF-IDF gating.
 
     Output: frozen_output + (1 - alpha) * gated_trainable_output
 
     Uses a residual connection so the frozen MLP output is always fully preserved.
     The trainable MLP adds new knowledge on top, scaled by (1 - alpha).
-    When trainable weights are zero-initialized, the output equals frozen_output exactly.
+    The trainable copy is initialized with a small random std (0.001) rather than
+    zeros, to avoid SwiGLU dead-gradient issues, so its initial contribution to the
+    output is near-zero but non-zero.
     """
 
     def __init__(

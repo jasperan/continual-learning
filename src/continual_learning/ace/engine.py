@@ -5,6 +5,7 @@ from continual_learning.ace.generator import Generator
 from continual_learning.ace.reflector import Reflector
 from continual_learning.ace.curator import Curator
 from continual_learning.ace.playbook import Playbook
+from continual_learning.text_utils import approx_tokens
 
 
 class ACEEngine:
@@ -49,9 +50,8 @@ class ACEEngine:
             Dict with tokens_processed, method, loops_completed, num_strategies.
         """
         self._documents.append(text)
-        word_count = len(text.split())
-        tokens_approx = int(word_count / 0.75)
-        loops_completed = 0
+        tokens_approx = approx_tokens(text)
+        loops_completed = self.num_loops if qa_pairs else 0
 
         if qa_pairs:
             for loop_num in range(1, self.num_loops + 1):
@@ -77,8 +77,6 @@ class ACEEngine:
 
                     if callback:
                         callback(loop_num, feedback.get("assessment", "unknown"))
-
-                loops_completed = loop_num
 
         self._playbook.stats["documents_processed"] = len(self._documents)
 

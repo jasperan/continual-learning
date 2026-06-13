@@ -4,6 +4,7 @@ from typing import Optional
 from continual_learning.doc2lora.chunker import DocumentChunker
 from continual_learning.doc2lora.hypernetwork import SimulatedHypernetwork
 from continual_learning.doc2lora.lora_injector import LoRAInjector
+from continual_learning.text_utils import approx_tokens
 
 
 class Doc2LoRAEngine:
@@ -40,21 +41,14 @@ class Doc2LoRAEngine:
         self._injector = LoRAInjector()
         self._documents: list[str] = []
 
-        if simulated:
-            self._hypernetwork = SimulatedHypernetwork(
-                hidden_dim=hidden_dim,
-                num_layers=num_target_layers,
-                lora_rank=lora_rank,
-                intermediate_dim=intermediate_dim,
-            )
-        else:
-            # TODO: Load real Perceiver hypernetwork from checkpoint
-            self._hypernetwork = SimulatedHypernetwork(
-                hidden_dim=hidden_dim,
-                num_layers=num_target_layers,
-                lora_rank=lora_rank,
-                intermediate_dim=intermediate_dim,
-            )
+        # TODO: When simulated=False, load the real Perceiver hypernetwork from a
+        # checkpoint. Until that lands, both modes use the simulated hypernetwork.
+        self._hypernetwork = SimulatedHypernetwork(
+            hidden_dim=hidden_dim,
+            num_layers=num_target_layers,
+            lora_rank=lora_rank,
+            intermediate_dim=intermediate_dim,
+        )
 
     def learn(self, text: str, callback: Optional[callable] = None) -> dict:
         """Ingest a document or task description via hypernetwork-generated LoRA.
@@ -84,8 +78,7 @@ class Doc2LoRAEngine:
             self.model, lora_weights, layer_prefix=self._layer_prefix
         )
 
-        word_count = len(text.split())
-        tokens_approx = int(word_count / 0.75)
+        tokens_approx = approx_tokens(text)
         effective_rank = self._hypernetwork.lora_rank * len(chunks)
 
         if callback:

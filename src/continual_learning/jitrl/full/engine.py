@@ -4,17 +4,22 @@ from transformers import LogitsProcessor, LogitsProcessorList
 
 from continual_learning.jitrl.base import BaseJitRLEngine
 from continual_learning.jitrl.full.knowledge_store import KnowledgeStore
-from continual_learning.jitrl.full.reward import RewardComputer, LogitModulator
+from continual_learning.jitrl.full.reward import RewardComputer
 
 
 class _RewardLogitsProcessor(LogitsProcessor):
-    def __init__(self, reward: torch.Tensor, projection: torch.Tensor, temperature: float):
-        self.modulator = LogitModulator(temperature=temperature)
-        self.reward = reward
-        self.projection = projection
+    """Adds a precomputed, vocab-sized reward bias to the logits each step.
+
+    The bias ``temperature * (reward @ lm_head.weight.T)`` is constant across
+    decoding steps, so it is computed once before generation rather than
+    re-projecting the full ``hidden x vocab`` matrix per token.
+    """
+
+    def __init__(self, bias: torch.Tensor):
+        self.bias = bias
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
-        return self.modulator.modulate(scores, self.reward, self.projection)
+        return scores + self.bias.to(scores.device)
 
 
 class JitRLFullEngine(BaseJitRLEngine):
@@ -25,7 +30,7 @@ class JitRLFullEngine(BaseJitRLEngine):
         self.modulation_temperature = modulation_temperature
         self.max_tokens = max_tokens
 
-        hidden_size = getattr(model.config, "hidden_size", 768)
+        hidden_size = model.config.hidden_size
         self._knowledge_store = KnowledgeStore(hidden_size=hidden_size)
         self._reward_computer = RewardComputer(hidden_size=hidden_size)
 
@@ -61,7 +66,7 @@ class JitRLFullEngine(BaseJitRLEngine):
 
         processors = LogitsProcessorList()
 
-        if self._knowledge_store.num_entries > 0:
+        if self._knowledge_store.num_entries > 0 and hasattr(self.model, "lm_head"):
             with torch.no_grad():
                 outputs = self.model(input_ids=input_ids, output_hidden_states=True)
             query_hidden = outputs.hidden_states[-1]
@@ -71,14 +76,14 @@ class JitRLFullEngine(BaseJitRLEngine):
 
             reward = self._reward_computer.compute(query_hidden, knowledge_embeddings)
 
-            if hasattr(self.model, "lm_head"):
-                projection = self.model.lm_head.weight.data.T.cpu()
-            else:
-                vocab_size = getattr(self.model.config, "vocab_size", 32000)
-                hidden_size = reward.shape[0]
-                projection = torch.randn(hidden_size, vocab_size) * 0.01
-
-            processors.append(_RewardLogitsProcessor(reward, projection, self.modulation_temperature))
+            if not torch.all(reward == 0):
+                # reward @ lm_head.weight.T is a constant vocab-sized vector, so
+                # compute the bias once instead of re-projecting per token.
+                lm_weight = self.model.lm_head.weight
+                bias = self.modulation_temperature * (
+                    reward.to(lm_weight.device) @ lm_weight.t()
+                )
+                processors.append(_RewardLogitsProcessor(bias))
 
         with torch.no_grad():
             outputs = self.model.generate(

@@ -1,6 +1,7 @@
 import json
 from continual_learning.ace.ollama_client import OllamaClient
 from continual_learning.ace.playbook import Playbook
+from continual_learning.text_utils import parse_json_block
 
 
 class Curator:
@@ -38,14 +39,7 @@ class Curator:
         playbook.stats["total_loops"] = loop_num
 
     def _parse_patch(self, raw: str) -> dict | None:
-        try:
-            text = raw.strip()
-            if text.startswith("```"):
-                lines = text.split("\n")
-                text = "\n".join(lines[1:-1]) if len(lines) > 2 else text
-            return json.loads(text)
-        except (json.JSONDecodeError, ValueError):
-            return None
+        return parse_json_block(raw)
 
     def _apply_patch(self, playbook: Playbook, patch: dict, loop_num: int) -> None:
         for sid in patch.get("remove", []):

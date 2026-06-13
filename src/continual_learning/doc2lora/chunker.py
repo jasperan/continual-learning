@@ -1,3 +1,6 @@
+from continual_learning.text_utils import chunk_words
+
+
 class DocumentChunker:
     """Splits documents into fixed-size token chunks for hypernetwork processing.
 
@@ -16,12 +19,4 @@ class DocumentChunker:
         if mode == "text":
             return [text]
 
-        words = text.split()
-        if len(words) <= self.chunk_size:
-            return [text]
-
-        chunks = []
-        for i in range(0, len(words), self.chunk_size):
-            chunk_words = words[i : i + self.chunk_size]
-            chunks.append(" ".join(chunk_words))
-        return chunks
+        return chunk_words(text, self.chunk_size)

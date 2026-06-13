@@ -5,6 +5,7 @@ from transformers import LogitsProcessor, LogitsProcessorList
 from continual_learning.jitrl.base import BaseJitRLEngine
 from continual_learning.jitrl.mvp.retriever import TFIDFRetriever
 from continual_learning.jitrl.mvp.logit_bias import LogitBiaser
+from continual_learning.text_utils import approx_tokens
 
 
 class _BiasLogitsProcessor(LogitsProcessor):
@@ -30,8 +31,7 @@ class JitRLMVPEngine(BaseJitRLEngine):
     def learn(self, text: str, callback: Optional[callable] = None) -> dict:
         self._documents.append(text)
         num_chunks = self._retriever.add_document(text, max_chunk_words=self.max_chunk_words)
-        word_count = len(text.split())
-        tokens_approx = int(word_count / 0.75)
+        tokens_approx = approx_tokens(text)
         if callback:
             callback(batch_idx=0, loss=0.0, tokens_so_far=tokens_approx)
         return {"tokens_processed": tokens_approx, "chunks_added": num_chunks, "method": "jitrl_mvp"}
@@ -51,7 +51,7 @@ class JitRLMVPEngine(BaseJitRLEngine):
         if attention_mask is not None:
             attention_mask = attention_mask.to(device)
 
-        vocab_size = getattr(self.model.config, "vocab_size", 32000)
+        vocab_size = self.model.config.vocab_size
         bias = self._biaser.compute_bias(chunks, vocab_size)
 
         processors = LogitsProcessorList()

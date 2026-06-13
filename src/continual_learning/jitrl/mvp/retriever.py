@@ -1,6 +1,7 @@
-import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
+from continual_learning.text_utils import chunk_words
 
 
 class TFIDFRetriever:
@@ -16,15 +17,7 @@ class TFIDFRetriever:
         return len(self._chunks)
 
     def add_document(self, text: str, max_chunk_words: int = 300) -> int:
-        words = text.split()
-        if len(words) <= max_chunk_words:
-            new_chunks = [text.strip()]
-        else:
-            new_chunks = []
-            for i in range(0, len(words), max_chunk_words):
-                chunk = " ".join(words[i:i + max_chunk_words]).strip()
-                if chunk:
-                    new_chunks.append(chunk)
+        new_chunks = chunk_words(text, max_chunk_words)
         self._chunks.extend(new_chunks)
         self._rebuild_index()
         return len(new_chunks)

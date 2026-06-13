@@ -1,5 +1,4 @@
-import torch
-from typing import Optional
+from continual_learning.text_utils import answer_matches
 
 
 class Doc2LoRAEvaluator:
@@ -44,7 +43,7 @@ class Doc2LoRAEvaluator:
             response = self.engine.generate(item["question"])
 
             # Check if expected answer appears in response (substring match)
-            is_correct = item["answer"].lower() in response.lower()
+            is_correct = answer_matches(item["answer"], response)
             if is_correct:
                 correct += 1
 
@@ -90,10 +89,9 @@ class Doc2LoRAEvaluator:
         Returns:
             Dict with found (bool), response, document_length_words.
         """
-        import random
-        # Insert needle at random position in haystack
+        # Insert needle at the middle position in the haystack
         all_texts = list(haystack_texts)
-        insert_pos = len(all_texts) // 2  # middle
+        insert_pos = len(all_texts) // 2
         all_texts.insert(insert_pos, needle_fact)
 
         full_document = "\n\n".join(all_texts)
@@ -140,7 +138,7 @@ class Doc2LoRAEvaluator:
         before_correct = 0
         for item in baseline_prompts:
             response = self.engine.generate(item["prompt"])
-            if item["expected"].lower() in response.lower():
+            if answer_matches(item["expected"], response):
                 before_correct += 1
         before_acc = before_correct / len(baseline_prompts) if baseline_prompts else 0.0
 
@@ -151,7 +149,7 @@ class Doc2LoRAEvaluator:
         after_correct = 0
         for item in baseline_prompts:
             response = self.engine.generate(item["prompt"])
-            if item["expected"].lower() in response.lower():
+            if answer_matches(item["expected"], response):
                 after_correct += 1
         after_acc = after_correct / len(baseline_prompts) if baseline_prompts else 0.0
 

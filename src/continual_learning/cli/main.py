@@ -7,8 +7,6 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
-from rich.live import Live
-from rich.markdown import Markdown
 
 from continual_learning.config import load_config, save_config
 
@@ -57,7 +55,7 @@ def print_header():
         import torch
         if torch.cuda.is_available():
             vram_used = f"{torch.cuda.memory_allocated() / 1e9:.1f}GB"
-            vram_total = f"{torch.cuda.get_device_properties(0).total_mem / 1e9:.1f}GB"
+            vram_total = f"{torch.cuda.get_device_properties(0).total_memory / 1e9:.1f}GB"
     except Exception:
         pass
 
@@ -522,7 +520,8 @@ def _ensure_doc2lora():
     global _doc2lora_engine
     if _doc2lora_engine is not None:
         return True
-    ensure_model_loaded()
+    if not ensure_model_loaded():
+        return False
     from continual_learning.doc2lora.engine import Doc2LoRAEngine
     _doc2lora_engine = Doc2LoRAEngine(
         model=_model,

@@ -41,7 +41,7 @@ A lightweight retrieval-augmented approach. Instead of modifying weights, it ind
 
 A more sophisticated retrieval approach. Documents are encoded into hidden-state embeddings and stored in a knowledge store. At query time, the system retrieves relevant knowledge embeddings, computes a reward signal via cosine similarity, and modulates the model's logit distribution to favor knowledge-aligned tokens.
 
-**Tradeoff**: More expressive than MVP but slower (~0.04s to learn, ~33s to generate). Currently less accurate than MVP; needs hyperparameter tuning.
+**Tradeoff**: More expressive than MVP but heavier at generation time. The reward bias is precomputed once per query as a single vocabulary-sized vector, so it adds to the logits cheaply on each decoded token. Currently less accurate than MVP; needs hyperparameter tuning.
 
 ### Strategy 4: ACE (Agentic Context Engineering)
 
@@ -353,7 +353,7 @@ doc2lora:
 ## Running Tests
 
 ```bash
-# All 206 tests (~10 seconds, no GPU needed)
+# All 217 tests (~15 seconds, no GPU needed)
 uv run pytest tests/
 
 # By component
@@ -450,6 +450,7 @@ src/continual_learning/
 │   └── manager.py           # Saves/loads trainable weights, TF-IDF stats, alpha, metadata
 ├── cli/
 │   └── main.py              # Interactive menu (Questionary + Rich) with all handlers
+├── text_utils.py            # Shared helpers: token estimation, word chunking, JSON/QA parsing
 └── config.py                # YAML config loader with defaults merge
 ```
 

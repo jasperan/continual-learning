@@ -1,5 +1,6 @@
 import time
 from continual_learning.jitrl.base import BaseJitRLEngine
+from continual_learning.text_utils import answer_matches
 
 
 class ComparisonHarness:
@@ -32,7 +33,7 @@ class ComparisonHarness:
                     f"Answer concisely: {item['question']}",
                     max_new_tokens=max_new_tokens,
                 )
-                if item["answer"].lower() in response.lower():
+                if answer_matches(item["answer"], response):
                     correct += 1
                 total += 1
             eval_time = time.time() - t0

@@ -1,5 +1,5 @@
-import json
 from continual_learning.ace.ollama_client import OllamaClient
+from continual_learning.text_utils import parse_json_block
 
 
 class Reflector:
@@ -30,13 +30,8 @@ class Reflector:
         return self._parse_feedback(raw)
 
     def _parse_feedback(self, raw: str) -> dict:
-        try:
-            text = raw.strip()
-            if text.startswith("```"):
-                lines = text.split("\n")
-                text = "\n".join(lines[1:-1]) if len(lines) > 2 else text
-            return json.loads(text)
-        except (json.JSONDecodeError, ValueError):
+        parsed = parse_json_block(raw)
+        if parsed is None:
             return {
                 "assessment": "unknown",
                 "strengths": [],
@@ -44,3 +39,4 @@ class Reflector:
                 "suggested_strategies": [],
                 "raw_response": raw,
             }
+        return parsed
