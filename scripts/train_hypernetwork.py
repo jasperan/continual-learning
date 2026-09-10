@@ -279,7 +279,6 @@ def main():
     os.makedirs(args.checkpoint_dir, exist_ok=True)
 
     if use_rich:
-        from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
         progress = Progress(
             SpinnerColumn(),
             TextColumn("[bold blue]{task.description}"),

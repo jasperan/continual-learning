@@ -149,9 +149,7 @@ def validate_milestone_2(model, tokenizer, dual_mlps):
     print("\n  Learning from test document...")
     start = time.time()
 
-    batch_losses = []
     def progress_callback(batch_idx, loss, tokens_so_far):
-        batch_losses.append(loss)
         print(f"    Batch {batch_idx}: loss={loss:.4f}, tokens={tokens_so_far}")
 
     metrics = engine.learn(test_document, callback=progress_callback)
@@ -324,7 +322,7 @@ def validate_milestone_3(model, tokenizer, dual_mlps, engine):
 def validate_milestone_5(model, tokenizer, dual_mlps, engine):
     print_section("MILESTONE 5: Oracle Docs Demonstration")
 
-    from continual_learning.data.oracle_docs import fetch_and_process, ORACLE_DOC_SOURCES, chunk_text
+    from continual_learning.data.oracle_docs import fetch_and_process, ORACLE_DOC_SOURCES
 
     # Step 1: Fetch Oracle docs
     all_chunks = []
