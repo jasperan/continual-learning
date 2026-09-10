@@ -79,7 +79,7 @@ class CheckpointManager:
             dual.trainable_mlp.load_state_dict(state)
 
         # Restore TF-IDF gate stats
-        gate_states = torch.load(cp_dir / "tfidf_stats.pt", weights_only=False)
+        gate_states = torch.load(cp_dir / "tfidf_stats.pt", weights_only=True)
         for dual, state in zip(dual_mlps, gate_states):
             dual.gate.load_state_dict_custom(state)
 

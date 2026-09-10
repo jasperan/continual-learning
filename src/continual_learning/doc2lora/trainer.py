@@ -248,7 +248,7 @@ class HypernetworkTrainer:
 
     def load_checkpoint(self, path: str):
         """Load hypernetwork checkpoint."""
-        ckpt = torch.load(path, map_location=self.device, weights_only=False)
+        ckpt = torch.load(path, map_location=self.device, weights_only=True)
         self.hypernetwork.load_state_dict(ckpt["hypernetwork_state_dict"])
         self.optimizer.load_state_dict(ckpt["optimizer_state_dict"])
         self.scheduler.load_state_dict(ckpt["scheduler_state_dict"])
